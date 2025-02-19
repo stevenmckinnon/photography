@@ -16,6 +16,7 @@ interface EmailTemplateProps {
   email: string;
   subject: string;
   message: string;
+  instagram?: string;
 }
 
 const baseUrl = "https://stevemckinnon.co.uk";
@@ -25,6 +26,7 @@ export const ContactEmail = ({
   email,
   subject,
   message,
+  instagram,
 }: EmailTemplateProps) => {
   const previewText = `${message.substring(0, 15)}...`;
 
@@ -44,12 +46,18 @@ export const ContactEmail = ({
               style={userImage}
             />
           </Section>
+          <Section>
+            <Text style={h1}>Photography Enquiry</Text>
+          </Section>
           <Section style={{ paddingBottom: "20px" }}>
             <Row>
               <Text style={heading}>Here's what {name} wrote</Text>
               <Text style={paragraph}>Contact email: {email}</Text>
               <Text style={paragraph}>Subject: {subject}</Text>
               <Text style={review}>{message}</Text>
+              {instagram && (
+                <Text style={paragraph}>Instagram: @{instagram}</Text>
+              )}
             </Row>
           </Section>
         </Container>
@@ -84,6 +92,11 @@ const heading = {
   lineHeight: "1.3",
   fontWeight: "700",
   color: "#484848",
+};
+
+const h1 = {
+  ...heading,
+  margin: "0 auto",
 };
 
 const paragraph = {

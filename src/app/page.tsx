@@ -1,30 +1,15 @@
-import Link from "next/link";
-import Markdown from "react-markdown";
-import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-
 import { AuroraText } from "@/components/magicui/aurora-text";
 import BlurFade from "@/components/magicui/blur-fade";
-import BlurFadeText from "@/components/magicui/blur-fade-text";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
-import { ResumeCard } from "@/components/resume-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { DATA } from "@/data/resume";
 import ImageGrid from "@/components/image-grid";
+import { getImages } from "@/lib/utils";
+import { imageSortOrder } from "./sortOrder";
 const BLUR_FADE_DELAY = 0.04;
 
 export default async function Page() {
-  const supabase = await createClient();
-
-  // Get all files from the photography bucket
-  const { data: files } = await supabase.storage.from("photography").list();
-  // Get public URLs for each file
-  const photos = files?.map((file) => ({
-    ...file,
-    url: supabase.storage.from("photography").getPublicUrl(file.name).data
-      .publicUrl,
-  }));
+  const photos = await getImages();
 
   return (
     <main className="flex flex-col h-full space-y-10">
@@ -53,7 +38,10 @@ export default async function Page() {
         </div>
       </section>
       <section id="location">
-        <ImageGrid photos={photos?.map(({ url, name }) => ({ url, name }))} />
+        <ImageGrid
+          sortOrder={imageSortOrder}
+          photos={photos?.map(({ url, name }) => ({ url, name }))}
+        />
       </section>
       <section id="contact">
         <div className="grid items-center justify-center gap-4 px-4 text-center md:px-6 w-full py-12">

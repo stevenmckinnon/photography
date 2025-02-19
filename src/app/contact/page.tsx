@@ -27,6 +27,7 @@ const schema = z.object({
   email: z.string().email("Invalid email address"),
   subject: z.string().min(1, "Subject is required"),
   message: z.string().min(1, "Message is required"),
+  instagram: z.string().optional(),
 });
 
 export type ContactFormData = z.infer<typeof schema>;
@@ -47,6 +48,7 @@ const Page = () => {
       email: "",
       subject: "",
       message: "",
+      instagram: "",
     },
   });
 
@@ -64,6 +66,7 @@ const Page = () => {
           email: formData.email,
           subject: formData.subject,
           message: formData.message,
+          instagram: formData.instagram,
         }),
       });
 
@@ -170,7 +173,19 @@ const Page = () => {
                     </FormItem>
                   )}
                 />
-
+                <FormField
+                  control={form.control}
+                  name="instagram"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Instagram" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" disabled={loading}>
                   {loading ? (
                     <Loader2 className="animate-spin" />
