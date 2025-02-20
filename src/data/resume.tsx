@@ -1,5 +1,4 @@
 import { Icons } from "@/components/icons";
-import { calculateYearsOfExperience } from "@/lib/utils";
 import type { Resume } from "@/types/resume";
 import { HomeIcon } from "lucide-react";
 
@@ -11,7 +10,6 @@ export const DATA: Resume = {
   locationLink: "https://www.google.com/maps/place/glasgow",
   description:
     "I'm a Glasgow based front end developer creating modern web apps.\nLet's start scrolling and learn more about me.",
-  summary: `I am a highly focused, enthusiastic software developer with over ${calculateYearsOfExperience()}  years experience. Strong team working and communication skills; including a high level of comfort when it comes to working with, and understanding business and technical requirements from end users.`,
   avatarUrl: "/me.jpg",
   skills: [
     "React",

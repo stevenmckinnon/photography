@@ -57,7 +57,6 @@ export type Resume = {
   location: string;
   locationLink: string;
   description: string;
-  summary: string;
   avatarUrl: string;
   skills: string[];
   navbar: NavbarItem[];

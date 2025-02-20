@@ -1,7 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { promises as fs } from "fs";
-import path from "path";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -35,47 +33,5 @@ export function formatDate(date: string) {
   } else {
     const yearsAgo = Math.floor(daysAgo / 365);
     return `${fullDate} (${yearsAgo}y ago)`;
-  }
-}
-
-export function calculateYearsOfExperience(): number {
-  const startDate = new Date("2014-06-01");
-  const currentDate = new Date();
-  const timeDifference = currentDate.getTime() - startDate.getTime();
-
-  // Calculate the difference in years.  Note that this doesn't account for
-  // whether the person has had their birthday yet this year.  See the more
-  // robust version below for that.
-  return Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365.25)); // Accounts for leap years
-}
-
-export async function getImages() {
-  try {
-    const imagesDirectory = path.join(process.cwd(), "public/images");
-
-    // Check if directory exists
-    try {
-      await fs.access(imagesDirectory);
-    } catch {
-      console.log("Images directory does not exist");
-      return [];
-    }
-
-    const imageFiles = await fs.readdir(imagesDirectory);
-
-    const images = imageFiles
-      .filter((file) => {
-        const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-        return validExtensions.some((ext) => file.toLowerCase().endsWith(ext));
-      })
-      .map((file) => ({
-        name: file,
-        url: `/images/${file}`,
-      }));
-
-    return images;
-  } catch (error) {
-    console.error("Error reading images directory:", error);
-    return [];
   }
 }

@@ -4,7 +4,7 @@ import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DATA } from "@/data/resume";
 import ImageGrid from "@/components/image-grid";
-import { getImages } from "@/lib/utils";
+import { getImages } from "@/lib/connect";
 import { imageSortOrder } from "./sortOrder";
 const BLUR_FADE_DELAY = 0.04;
 
