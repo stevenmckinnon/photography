@@ -14,24 +14,18 @@ import {
   CarouselNext,
 } from "./ui/carousel";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
+import useBreakpoint from "@/hooks/useBreakpoints";
 
 type Image = {
   name: string;
   url: string;
 };
 
-interface ImageWithDimensions {
-  url: string;
-  name: string;
-  width: number;
-  height: number;
-  aspectRatio: "landscape" | "portrait";
-}
-
 export default function ImageGrid() {
   const [photos, setPhotos] = useState<Image[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
   const [bottomRowIndices, setBottomRowIndices] = useState<number[]>([]);
+  const { isBelowMd } = useBreakpoint("md");
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -67,6 +61,7 @@ export default function ImageGrid() {
 
   useEffect(() => {
     const detectBottomRow = () => {
+      if (isBelowMd) return;
       const container = document.querySelector("ul");
       if (!container) return;
 
@@ -99,7 +94,7 @@ export default function ImageGrid() {
       clearTimeout(timeoutId);
       window.removeEventListener("resize", handleResize);
     };
-  }, [sortedPhotos]);
+  }, [sortedPhotos, isBelowMd]);
 
   function debounce(fn: Function, ms: number) {
     let timer: NodeJS.Timeout;
