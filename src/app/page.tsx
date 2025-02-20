@@ -4,19 +4,10 @@ import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DATA } from "@/data/resume";
 import ImageGrid from "@/components/image-grid";
-import { imageSortOrder } from "./sortOrder";
+
 const BLUR_FADE_DELAY = 0.04;
 
-type Image = {
-  name: string;
-  url: string;
-};
-
-export default async function Page() {
-  const response = await fetch(`${process.env.NEXT_URL}/api/images`);
-  const data = await response?.json();
-  const photos: Image[] = data.images;
-
+export default function Page() {
   return (
     <main className="flex flex-col h-full space-y-10">
       <section id="hero">
@@ -44,7 +35,7 @@ export default async function Page() {
         </div>
       </section>
       <section id="location">
-        <ImageGrid sortOrder={imageSortOrder} photos={photos} />
+        <ImageGrid />
       </section>
       <section id="contact">
         <div className="grid items-center justify-center gap-4 px-4 text-center md:px-6 w-full py-12">

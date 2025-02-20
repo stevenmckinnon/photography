@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Loader2 } from "lucide-react";
+
 import NextImage from "@/components/image";
+import { imageSortOrder } from "@/data/sortOrder";
 
 import {
   Carousel,
@@ -13,13 +15,10 @@ import {
 } from "./ui/carousel";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 
-interface ImageGridProps {
-  photos: {
-    url: string;
-    name: string;
-  }[];
-  sortOrder?: string[];
-}
+type Image = {
+  name: string;
+  url: string;
+};
 
 interface ImageWithDimensions {
   url: string;
@@ -29,15 +28,28 @@ interface ImageWithDimensions {
   aspectRatio: "landscape" | "portrait";
 }
 
-export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
+export default function ImageGrid() {
+  const [photos, setPhotos] = useState<Image[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
   const [bottomRowIndices, setBottomRowIndices] = useState<number[]>([]);
 
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const response = await fetch(`/api/images`);
+      const data = await response?.json();
+      const photos: Image[] = data.images;
+
+      setPhotos(photos);
+    };
+
+    fetchPhotos();
+  }, []);
+
   const sortedPhotos = useMemo(() => {
-    return sortOrder
+    return imageSortOrder
       ? [...photos].sort((a, b) => {
-          const aIndex = sortOrder.indexOf(a.name);
-          const bIndex = sortOrder.indexOf(b.name);
+          const aIndex = imageSortOrder.indexOf(a.name);
+          const bIndex = imageSortOrder.indexOf(b.name);
 
           // If both items are in sortOrder, sort by their position
           if (aIndex !== -1 && bIndex !== -1) {
@@ -51,7 +63,7 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
           return 0;
         })
       : photos;
-  }, [photos, sortOrder]);
+  }, [photos]);
 
   useEffect(() => {
     const detectBottomRow = () => {
