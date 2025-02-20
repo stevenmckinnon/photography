@@ -28,9 +28,7 @@ interface ImageWithDimensions {
 }
 
 export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
-  const [selectedPhoto, setSelectedPhoto] = useState<number | undefined>(
-    undefined
-  );
+  const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
   const [processedPhotos, setProcessedPhotos] = useState<ImageWithDimensions[]>(
     []
   );
@@ -132,7 +130,7 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setSelectedPhoto(undefined);
+      setSelectedPhoto(-1);
     }
   };
 
@@ -167,7 +165,7 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
         ))}
       </ul>
 
-      <Dialog open={!!selectedPhoto} onOpenChange={handleOpenChange}>
+      <Dialog open={selectedPhoto > -1} onOpenChange={handleOpenChange}>
         <DialogContent className="bg-transparent border-none max-w-[90vw] max-h-[90vh]">
           <DialogTitle className="sr-only">Photo</DialogTitle>
           <Carousel scrollTo={selectedPhoto}>
