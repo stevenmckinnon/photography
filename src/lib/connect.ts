@@ -4,6 +4,8 @@ export const pbClient = new PocketBase("https://photography-database.fly.dev");
 
 // get all images
 export const getImages = async () => {
+  pbClient.autoCancellation(false);
+
   const imageRecords = await pbClient.collection("photographs").getFullList();
 
   const images = imageRecords.map((record) => {
