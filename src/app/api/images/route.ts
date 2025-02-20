@@ -2,11 +2,21 @@ import { NextResponse } from "next/server";
 import { S3 } from "@aws-sdk/client-s3";
 
 export async function GET() {
+  if (
+    !process.env.AWS_REGION ||
+    !process.env.AWS_ACCESS_KEY ||
+    !process.env.AWS_SECRET_ACCESS_KEY ||
+    !process.env.AWS_BUCKET_NAME
+  ) {
+    console.error("Missing AWS credentials or configuration");
+    return new NextResponse("Server configuration error", { status: 500 });
+  }
+
   const s3Client = new S3({
     region: process.env.AWS_REGION,
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.AWS_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
   });
 
