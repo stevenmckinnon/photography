@@ -1,6 +1,5 @@
 "use client";
 import { cn } from "@/lib/utils";
-import NextImage, { ImageProps as NextImageProps } from "next/image";
 import { useEffect, useState } from "react";
 
 interface ImageWithDimensions {
@@ -60,13 +59,12 @@ export default function Images({
       } ${bottomRowIndices.includes(index) ? "!grow-0" : ""}`}
     >
       <button onClick={() => setSelectedPhoto(index)} className="h-full w-full">
-        <NextImage
+        <img
           src={processedImage.url}
           width={processedImage.width}
           height={processedImage.height}
           alt={processedImage.name}
           data-loaded="false"
-          priority
           onLoad={(event) => {
             event.currentTarget.setAttribute("data-loaded", "true");
           }}
