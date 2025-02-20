@@ -2,13 +2,9 @@ import { NextResponse } from "next/server";
 import { S3 } from "@aws-sdk/client-s3";
 
 export async function GET() {
-  console.log("AWS_REGION", process.env.AWS_REGION);
-  console.log("AWS_ACCESS_KEY", process.env.AWS_ACCESS_KEY);
-  console.log("AWS_SECRET_ACCESS_KEY", process.env.AWS_SECRET_ACCESS_KEY);
-  console.log("AWS_BUCKET_NAME", process.env.AWS_BUCKET_NAME);
   if (
     !process.env.AWS_REGION ||
-    !process.env.AWS_ACCESS_KEY ||
+    !process.env.AWS_ACCESS_KEY_ID ||
     !process.env.AWS_SECRET_ACCESS_KEY ||
     !process.env.AWS_BUCKET_NAME
   ) {
@@ -19,7 +15,7 @@ export async function GET() {
   const s3Client = new S3({
     region: process.env.AWS_REGION,
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
   });
