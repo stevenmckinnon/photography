@@ -117,11 +117,12 @@ const Page = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel required>Name</FormLabel>
                       <FormControl>
                         <Input
                           autoComplete="name"
                           placeholder="Your name"
+                          required
                           {...field}
                         />
                       </FormControl>
@@ -134,12 +135,13 @@ const Page = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel required>Email</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           autoComplete="email"
                           placeholder="Your email"
+                          required
                           {...field}
                         />
                       </FormControl>
@@ -152,9 +154,9 @@ const Page = () => {
                   name="subject"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Subject</FormLabel>
+                      <FormLabel required>Subject</FormLabel>
                       <FormControl>
-                        <Input placeholder="Subject" {...field} />
+                        <Input placeholder="Subject" required {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -165,9 +167,13 @@ const Page = () => {
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Message</FormLabel>
+                      <FormLabel required>Message</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Your message" {...field} />
+                        <Textarea
+                          placeholder="Your message"
+                          required
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -178,7 +184,7 @@ const Page = () => {
                   name="instagram"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Instagram</FormLabel>
+                      <FormLabel optional>Instagram</FormLabel>
                       <FormControl>
                         <Input placeholder="Instagram" {...field} />
                       </FormControl>

@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Loader2 } from "lucide-react";
+import NextImage from "@/components/image";
+
 import {
   Carousel,
   CarouselContent,
@@ -9,10 +12,9 @@ import {
   CarouselNext,
 } from "./ui/carousel";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
-import NextImage from "@/components/image";
 
 interface ImageGridProps {
-  photos?: {
+  photos: {
     url: string;
     name: string;
   }[];
@@ -29,59 +31,26 @@ interface ImageWithDimensions {
 
 export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
-  const [processedPhotos, setProcessedPhotos] = useState<ImageWithDimensions[]>(
-    []
-  );
-  const [isLoading, setIsLoading] = useState(true);
   const [bottomRowIndices, setBottomRowIndices] = useState<number[]>([]);
 
-  useEffect(() => {
-    const loadImageDimensions = async () => {
-      if (!photos) return;
+  const sortedPhotos = useMemo(() => {
+    return sortOrder
+      ? [...photos].sort((a, b) => {
+          const aIndex = sortOrder.indexOf(a.name);
+          const bIndex = sortOrder.indexOf(b.name);
 
-      const processed = await Promise.all(
-        photos.map(
-          (photo) =>
-            new Promise<ImageWithDimensions>((resolve) => {
-              const img = new Image();
-              img.onload = () => {
-                resolve({
-                  ...photo,
-                  width: img.width,
-                  height: img.height,
-                  aspectRatio:
-                    img.width > img.height ? "landscape" : "portrait",
-                });
-              };
-              img.src = photo.url;
-            })
-        )
-      );
-
-      // Sort the processed photos if sortOrder is provided
-      const sortedPhotos = sortOrder
-        ? [...processed].sort((a, b) => {
-            const aIndex = sortOrder.indexOf(a.name);
-            const bIndex = sortOrder.indexOf(b.name);
-
-            // If both items are in sortOrder, sort by their position
-            if (aIndex !== -1 && bIndex !== -1) {
-              return aIndex - bIndex;
-            }
-            // If only a is in sortOrder, it comes first
-            if (aIndex !== -1) return -1;
-            // If only b is in sortOrder, it comes first
-            if (bIndex !== -1) return 1;
-            // If neither is in sortOrder, maintain original order
-            return 0;
-          })
-        : processed;
-
-      setProcessedPhotos(sortedPhotos);
-      setIsLoading(false);
-    };
-
-    loadImageDimensions();
+          // If both items are in sortOrder, sort by their position
+          if (aIndex !== -1 && bIndex !== -1) {
+            return aIndex - bIndex;
+          }
+          // If only a is in sortOrder, it comes first
+          if (aIndex !== -1) return -1;
+          // If only b is in sortOrder, it comes first
+          if (bIndex !== -1) return 1;
+          // If neither is in sortOrder, maintain original order
+          return 0;
+        })
+      : photos;
   }, [photos, sortOrder]);
 
   useEffect(() => {
@@ -91,12 +60,11 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
 
       const items = container.querySelectorAll("li");
       const bottomIndices: number[] = [];
-
       let lastBottom = 0;
+
       items.forEach((item, index) => {
         const rect = item.getBoundingClientRect();
         if (rect.bottom > lastBottom) {
-          // Clear previous indices if we found a new bottom row
           bottomIndices.length = 0;
           lastBottom = rect.bottom;
         }
@@ -108,15 +76,18 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
       setBottomRowIndices(bottomIndices);
     };
 
-    // Run initial detection
-    detectBottomRow();
+    // Add a small delay to ensure images have had a chance to layout
+    const timeoutId = setTimeout(detectBottomRow, 500);
 
     // Add resize listener
     const handleResize = debounce(detectBottomRow, 100);
     window.addEventListener("resize", handleResize);
 
-    return () => window.removeEventListener("resize", handleResize);
-  }, [processedPhotos]);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [sortedPhotos]);
 
   function debounce(fn: Function, ms: number) {
     let timer: NodeJS.Timeout;
@@ -126,7 +97,12 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
     };
   }
 
-  if (!photos?.length || isLoading) return null;
+  if (!photos?.length)
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-4 h-4 animate-spin" />
+      </div>
+    );
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -137,31 +113,14 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
   return (
     <>
       <ul className="flex flex-wrap gap-1">
-        {processedPhotos.map((photo, index) => (
-          <li
+        {sortedPhotos.map((photo, index) => (
+          <NextImage
             key={photo.name}
-            className={`grow w-full h-auto ${
-              photo.aspectRatio === "landscape"
-                ? "sm:h-[300px] sm:w-[400px]"
-                : "sm:h-[300px] sm:w-[200px]"
-            } ${bottomRowIndices.includes(index) ? "!grow-0" : ""}`}
-          >
-            <button
-              onClick={() => setSelectedPhoto(index)}
-              className="h-full w-full"
-            >
-              <NextImage
-                src={photo.url}
-                alt={photo.name}
-                className="h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm"
-                width={photo.width}
-                height={photo.height}
-                priority
-                placeholder="blur"
-                blurDataURL="url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mPsqgcAAZkBC+sDr3AAAAAASUVORK5CYII=)"
-              />
-            </button>
-          </li>
+            image={photo}
+            index={index}
+            bottomRowIndices={bottomRowIndices}
+            setSelectedPhoto={setSelectedPhoto}
+          />
         ))}
       </ul>
 
@@ -170,16 +129,14 @@ export default function ImageGrid({ photos, sortOrder }: ImageGridProps) {
           <DialogTitle className="sr-only">Photo</DialogTitle>
           <Carousel scrollTo={selectedPhoto}>
             <CarouselContent>
-              {processedPhotos.map((photo) => (
+              {sortedPhotos.map((photo) => (
                 <CarouselItem
                   key={photo.name}
                   className="flex items-center justify-center"
                 >
-                  <NextImage
+                  <img
                     src={photo.url}
                     alt={photo.name}
-                    width={photo.width}
-                    height={photo.height}
                     className="max-w-full max-h-[85vh] object-contain"
                   />
                 </CarouselItem>

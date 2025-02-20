@@ -4,12 +4,18 @@ import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DATA } from "@/data/resume";
 import ImageGrid from "@/components/image-grid";
-import { getImages } from "@/lib/connect";
 import { imageSortOrder } from "./sortOrder";
 const BLUR_FADE_DELAY = 0.04;
 
+type Image = {
+  name: string;
+  url: string;
+};
+
 export default async function Page() {
-  const photos = await getImages();
+  const response = await fetch(`${process.env.NEXT_URL}/api/images`);
+  const data = await response?.json();
+  const photos: Image[] = data.images;
 
   return (
     <main className="flex flex-col h-full space-y-10">
@@ -38,20 +44,17 @@ export default async function Page() {
         </div>
       </section>
       <section id="location">
-        <ImageGrid
-          sortOrder={imageSortOrder}
-          photos={photos?.map(({ url, name }) => ({ url, name }))}
-        />
+        <ImageGrid sortOrder={imageSortOrder} photos={photos} />
       </section>
       <section id="contact">
         <div className="grid items-center justify-center gap-4 px-4 text-center md:px-6 w-full py-12">
           <BlurFade delay={BLUR_FADE_DELAY * 10}>
             <div className="space-y-3">
               <h2 className="text-2xl font-bold tracking-tighter sm:text-4xl">
-                Get in Touch
+                Want to work together?
               </h2>
               <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Want to chat? Just shoot me an email&nbsp;
+                Just shoot me an email and we can chat about your ideas.
               </p>
               <RainbowButton href="/contact">Contact me</RainbowButton>
             </div>
