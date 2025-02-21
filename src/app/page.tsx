@@ -4,10 +4,17 @@ import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DATA } from "@/data/resume";
 import ImageGrid from "@/components/image-grid";
-
+import { list } from "@vercel/blob";
 const BLUR_FADE_DELAY = 0.04;
 
-export default function Page() {
+export default async function Page() {
+  const { blobs } = await list();
+
+  const photos = blobs.map((blob) => ({
+    name: blob.pathname,
+    url: blob.url,
+  }));
+
   return (
     <main className="flex flex-col h-full space-y-10">
       <section id="hero">
@@ -35,7 +42,7 @@ export default function Page() {
         </div>
       </section>
       <section id="location">
-        <ImageGrid />
+        <ImageGrid photos={photos} />
       </section>
       <section id="contact">
         <div className="grid items-center justify-center gap-4 px-4 text-center md:px-6 w-full py-12">
