@@ -21,23 +21,23 @@ type Image = {
   url: string;
 };
 
-export default function ImageGrid({ photos }: { photos: Image[] }) {
-  //   const [photos, setPhotos] = useState<Image[]>([]);
+export default function ImageGrid() {
+  const [photos, setPhotos] = useState<Image[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
   const [bottomRowIndices, setBottomRowIndices] = useState<number[]>([]);
   const { isBelowMd } = useBreakpoint("md");
 
-  //   useEffect(() => {
-  //     const fetchPhotos = async () => {
-  //       const response = await fetch(`/api/images`);
-  //       const data = await response?.json();
-  //       const photos: Image[] = data.images;
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const response = await fetch(`/api/images`);
+      const data = await response?.json();
+      const photos: Image[] = data.images;
 
-  //       setPhotos(photos);
-  //     };
+      setPhotos(photos);
+    };
 
-  //     fetchPhotos();
-  //   }, []);
+    fetchPhotos();
+  }, []);
 
   const sortedPhotos = useMemo(() => {
     return imageSortOrder
