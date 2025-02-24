@@ -13,7 +13,12 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "./ui/carousel";
-import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "./ui/dialog";
 import useBreakpoint from "@/hooks/useBreakpoints";
 
 type Image = {
@@ -152,6 +157,9 @@ export default function ImageGrid() {
             <CarouselPrevious />
             <CarouselNext />
           </Carousel>
+          <DialogDescription className="sr-only">
+            {sortedPhotos?.[selectedPhoto]?.name}
+          </DialogDescription>
         </DialogContent>
       </Dialog>
     </>

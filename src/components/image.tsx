@@ -58,7 +58,12 @@ export default function Images({
           : "sm:h-[300px] sm:w-[200px]"
       } ${bottomRowIndices.includes(index) ? "!grow-0" : ""}`}
     >
-      <button onClick={() => setSelectedPhoto(index)} className="h-full w-full">
+      <button
+        onClick={() => setSelectedPhoto(index)}
+        className="h-full w-full"
+        aria-label={`View ${processedImage.name}`}
+        role="button"
+      >
         <img
           src={processedImage.url}
           width={processedImage.width}
