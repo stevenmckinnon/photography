@@ -35,7 +35,7 @@ export default function Images({
       // If it's already a full URL, extract just the filename
       const filename = url.includes("/") ? url.split("/").pop() || url : url;
       const encodedPath = encodeURIComponent(filename);
-      return `/api/images/${encodedPath}?width=${width}&quality=85`;
+      return `/api/images/${encodedPath}?width=${width}&quality=80`;
     } catch (e) {
       console.error("Error formatting image URL:", e);
       return url; // Fallback to original URL
