@@ -23,6 +23,23 @@ export default function Images({
 }) {
   const [processedImage, setProcessedImage] =
     useState<ImageWithDimensions | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Process the image URL to use our API
+  const getOptimizedImageUrl = (url: string) => {
+    // Extract the path from the URL
+    const urlObj = new URL(url);
+    const path = urlObj.pathname.split("/").pop();
+
+    // If we're in a development environment or can't extract the path, return original URL
+    if (!path || process.env.NODE_ENV === "development") return url;
+
+    // Determine appropriate width based on viewport
+    const width = window.innerWidth < 768 ? 400 : 800;
+
+    // Return the API URL
+    return `/api/images/${path}?width=${width}&quality=85`;
+  };
 
   useEffect(() => {
     const loadImageDimensions = async () => {
@@ -45,9 +62,13 @@ export default function Images({
     };
 
     loadImageDimensions();
-  }, []);
+  }, [image]);
 
-  if (!processedImage) return null;
+  if (!processedImage) {
+    return (
+      <li className="grow w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm" />
+    );
+  }
 
   return (
     <li
@@ -65,14 +86,12 @@ export default function Images({
         role="button"
       >
         <img
-          src={processedImage.url}
+          src={getOptimizedImageUrl(processedImage.url)}
           width={processedImage.width}
           height={processedImage.height}
           alt={processedImage.name}
-          data-loaded="false"
-          onLoad={(event) => {
-            event.currentTarget.setAttribute("data-loaded", "true");
-          }}
+          data-loaded={isLoaded}
+          onLoad={() => setIsLoaded(true)}
           className={cn(
             "h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm",
             "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
