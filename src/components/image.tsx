@@ -25,20 +25,11 @@ export default function Images({
     useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Process the image URL to use our API
-  const getOptimizedImageUrl = (url: string) => {
-    // Extract the path from the URL
-    const urlObj = new URL(url);
-    const path = urlObj.pathname.split("/").pop();
-
-    // If we're in a development environment or can't extract the path, return original URL
-    if (!path || process.env.NODE_ENV === "development") return url;
-
-    // Determine appropriate width based on viewport
-    const width = window.innerWidth < 768 ? 400 : 800;
-
-    // Return the API URL
-    return `/api/images/${path}?width=${width}&quality=85`;
+  // Update the URL generation function to handle paths more robustly
+  const getImageUrl = (path: string, width: number) => {
+    // Ensure path is properly encoded to avoid URL parsing issues
+    const encodedPath = encodeURIComponent(path);
+    return `/api/images/${encodedPath}?width=${width}&quality=85`;
   };
 
   useEffect(() => {
@@ -70,6 +61,8 @@ export default function Images({
     );
   }
 
+  const imageUrl = getImageUrl(processedImage.url, processedImage.width);
+
   return (
     <li
       key={processedImage.name}
@@ -86,7 +79,7 @@ export default function Images({
         role="button"
       >
         <img
-          src={getOptimizedImageUrl(processedImage.url)}
+          src={imageUrl}
           width={processedImage.width}
           height={processedImage.height}
           alt={processedImage.name}
