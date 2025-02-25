@@ -6,7 +6,7 @@ import { Metadata } from "next";
 const BLUR_FADE_DELAY = 0.04;
 
 export const metadata: Metadata = {
-  title: "Photography Portfolio | Steve McKinnon",
+  title: "Steve McKinnon Photography",
   description: "Glasgow based lifestyle and portrait photographer",
   openGraph: {
     images: ["path/to/og-image.jpg"],
