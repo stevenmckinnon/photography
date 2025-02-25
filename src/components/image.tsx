@@ -30,7 +30,7 @@ export default function Images({
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Update the URL generation function to handle paths more robustly
-  const getImageUrl = (url: string, width = 800) => {
+  const getImageUrl = (url: string, width = 500) => {
     try {
       // If it's already a full URL, extract just the filename
       const filename = url.includes("/") ? url.split("/").pop() || url : url;
