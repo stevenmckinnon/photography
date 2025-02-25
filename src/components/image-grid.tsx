@@ -24,6 +24,7 @@ import useBreakpoint from "@/hooks/useBreakpoints";
 type Image = {
   name: string;
   url: string;
+  imageUrl: string;
 };
 
 export default function ImageGrid() {
