@@ -123,6 +123,18 @@ export default function ImageGrid() {
     }
   };
 
+  const getImageUrl = (url: string, width = 800) => {
+    try {
+      // If it's already a full URL, extract just the filename
+      const filename = url.includes("/") ? url.split("/").pop() || url : url;
+      const encodedPath = encodeURIComponent(filename);
+      return `/api/images/${encodedPath}?width=${width}&quality=85`;
+    } catch (e) {
+      console.error("Error formatting image URL:", e);
+      return url; // Fallback to original URL
+    }
+  };
+
   return (
     <>
       <ul className="flex flex-wrap gap-1">
@@ -148,7 +160,7 @@ export default function ImageGrid() {
                   className="flex items-center justify-center"
                 >
                   <img
-                    src={photo.url}
+                    src={getImageUrl(photo.url)}
                     alt={photo.name}
                     className="max-w-full max-h-[85vh] object-contain"
                   />
