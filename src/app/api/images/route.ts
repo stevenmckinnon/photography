@@ -33,7 +33,7 @@ export async function GET() {
     const images = data.Contents.map((object) => {
       return {
         name: object.Key,
-        url: `${process.env.IMGIX_URL}/${object.Key}`,
+        url: object.Key,
       };
     });
 
