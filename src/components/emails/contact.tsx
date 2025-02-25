@@ -97,6 +97,7 @@ const heading = {
 const h1 = {
   ...heading,
   margin: "0 auto",
+  fontSize: "24px",
 };
 
 const paragraph = {

@@ -16,6 +16,7 @@ interface BlurFadeTextProps {
   delay?: number;
   yOffset?: number;
   animateByCharacter?: boolean;
+  wrapperClassName?: string;
 }
 const BlurFadeText = ({
   text,
@@ -25,6 +26,7 @@ const BlurFadeText = ({
   delay = 0,
   yOffset = 8,
   animateByCharacter = false,
+  wrapperClassName,
 }: BlurFadeTextProps) => {
   const defaultVariants: Variants = {
     hidden: { y: yOffset, opacity: 0, filter: "blur(8px)" },
@@ -35,7 +37,7 @@ const BlurFadeText = ({
 
   if (animateByCharacter) {
     return (
-      <div className="flex">
+      <div className={cn("flex", wrapperClassName)}>
         <AnimatePresence>
           {characters.map((char, i) => (
             <motion.span
@@ -61,7 +63,7 @@ const BlurFadeText = ({
   }
 
   return (
-    <div className="flex">
+    <div className={cn("flex", wrapperClassName)}>
       <AnimatePresence>
         <motion.span
           initial="hidden"

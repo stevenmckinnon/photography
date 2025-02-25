@@ -1,8 +1,5 @@
-import { AuroraText } from "@/components/magicui/aurora-text";
 import BlurFade from "@/components/magicui/blur-fade";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DATA } from "@/data/resume";
 import ImageGrid from "@/components/image-grid";
 import { Metadata } from "next";
 
@@ -18,31 +15,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="flex flex-col h-full space-y-10">
-      <section id="hero">
-        <div className="mx-auto w-full max-w-2xl space-y-8">
-          <div className="gap-4 flex flex-col items-center justify-between">
-            <BlurFade delay={BLUR_FADE_DELAY}>
-              <Avatar className="size-28 border">
-                <AvatarImage alt={DATA.name} src={DATA.avatarUrl} />
-                <AvatarFallback>{DATA.initials}</AvatarFallback>
-              </Avatar>
-            </BlurFade>
-            <BlurFade delay={BLUR_FADE_DELAY * 2}>
-              <h1 className="flex items-center justify-center text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                <AuroraText className="pr-[1px] pl-[1px]">
-                  {DATA.name}
-                </AuroraText>
-              </h1>
-            </BlurFade>
-            <BlurFade delay={BLUR_FADE_DELAY * 3}>
-              <p className="prose max-w-full text-pretty font-sans text-sm text-muted-foreground dark:prose-invert">
-                Glasgow based lifestyle and portrait photographer
-              </p>
-            </BlurFade>
-          </div>
-        </div>
-      </section>
+    <>
       <section id="location">
         <ImageGrid />
       </section>
@@ -61,6 +34,6 @@ export default function Page() {
           </BlurFade>
         </div>
       </section>
-    </main>
+    </>
   );
 }

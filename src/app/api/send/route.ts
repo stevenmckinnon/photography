@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 import EmailTemplate from "@/components/emails/contact";
 import type { ReactElement } from "react";
@@ -6,7 +8,19 @@ import { DATA } from "@/data/resume";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(5, '1 h'),
+});
+
 export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for');
+  const { success } = await ratelimit.limit(ip ?? 'anonymous');
+  
+  if (!success) {
+    return new Response('Too many requests', { status: 429 });
+  }
+
   try {
     const { name, email, message, subject, instagram } = await request.json();
     const { data, error } = await resend.emails.send({
