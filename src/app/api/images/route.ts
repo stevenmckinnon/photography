@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { S3 } from "@aws-sdk/client-s3";
+import { S3, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function GET() {
   if (
@@ -29,13 +30,26 @@ export async function GET() {
       return NextResponse.json({ images: [] });
     }
 
-    // Create an array of objects with the image details
-    const images = data.Contents.map((object) => {
-      return {
-        name: object.Key,
-        url: object.Key,
-      };
-    });
+    // Create an array of objects with the image details and presigned URLs
+    const images = await Promise.all(
+      data.Contents.map(async (object) => {
+        if (!object.Key) return null;
+        
+        // Create a presigned URL that will work for direct access
+        const command = new GetObjectCommand({
+          Bucket: bucketName,
+          Key: object.Key,
+        });
+        
+        const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // URL valid for 1 hour
+        
+        return {
+          name: object.Key,
+          url: object.Key, // Keep the key for reference
+          imageUrl: url, // Add the presigned URL for direct access
+        };
+      })
+    ).then(results => results.filter(Boolean));
 
     return NextResponse.json({ images });
   } catch (error) {

@@ -26,7 +26,7 @@ export async function GET(
     
     // Get the original image from S3
     const command = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || 'photography',
+      Bucket: process.env.AWS_BUCKET_NAME || 'photography',
       Key: path,
     });
     
@@ -64,8 +64,13 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error processing image:', error);
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return NextResponse.json(
-      { error: 'Failed to process image' },
+      { error: 'Failed to process image', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

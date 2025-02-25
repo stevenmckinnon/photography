@@ -16,7 +16,11 @@ export default function Images({
   bottomRowIndices,
   setSelectedPhoto,
 }: {
-  image: { url: string; name: string };
+  image: {
+    imageUrl: string;
+    url: string;
+    name: string;
+  };
   index: number;
   bottomRowIndices: number[];
   setSelectedPhoto: (index: number) => void;
@@ -26,15 +30,21 @@ export default function Images({
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Update the URL generation function to handle paths more robustly
-  const getImageUrl = (path: string, width = 800) => {
-    // Ensure path is properly encoded to avoid URL parsing issues
-    const encodedPath = encodeURIComponent(path);
-    return `/api/images/${encodedPath}?width=${width}&quality=85`;
+  const getImageUrl = (url: string, width = 800) => {
+    try {
+      // If it's already a full URL, extract just the filename
+      const filename = url.includes("/") ? url.split("/").pop() || url : url;
+      const encodedPath = encodeURIComponent(filename);
+      return `/api/images/${encodedPath}?width=${width}&quality=85`;
+    } catch (e) {
+      console.error("Error formatting image URL:", e);
+      return url; // Fallback to original URL
+    }
   };
 
   const formattedImage = {
     ...image,
-    url: getImageUrl(image.url),
+    url: image.imageUrl || getImageUrl(image.url),
   };
 
   useEffect(() => {
