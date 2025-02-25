@@ -26,10 +26,15 @@ export default function Images({
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Update the URL generation function to handle paths more robustly
-  const getImageUrl = (path: string, width: number) => {
+  const getImageUrl = (path: string, width = 800) => {
     // Ensure path is properly encoded to avoid URL parsing issues
     const encodedPath = encodeURIComponent(path);
     return `/api/images/${encodedPath}?width=${width}&quality=85`;
+  };
+
+  const formattedImage = {
+    ...image,
+    url: getImageUrl(image.url),
   };
 
   useEffect(() => {
@@ -39,13 +44,13 @@ export default function Images({
           const img = new Image();
           img.onload = () => {
             resolve({
-              ...image,
+              ...formattedImage,
               width: img.width,
               height: img.height,
               aspectRatio: img.width > img.height ? "landscape" : "portrait",
             });
           };
-          img.src = image.url;
+          img.src = formattedImage.url;
         });
 
       const processedImage = await loadImage();
@@ -53,15 +58,13 @@ export default function Images({
     };
 
     loadImageDimensions();
-  }, [image]);
+  }, [formattedImage]);
 
   if (!processedImage) {
     return (
       <li className="grow w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm" />
     );
   }
-
-  const imageUrl = getImageUrl(processedImage.url, processedImage.width);
 
   return (
     <li
@@ -79,7 +82,7 @@ export default function Images({
         role="button"
       >
         <img
-          src={imageUrl}
+          src={processedImage.url}
           width={processedImage.width}
           height={processedImage.height}
           alt={processedImage.name}
