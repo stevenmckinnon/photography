@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface ImageWithDimensions {
   url: string;
@@ -28,6 +28,28 @@ export default function Images({
   const [processedImage, setProcessedImage] =
     useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>(image.imageUrl || "");
+  
+  // Function to refresh the image URL if needed
+  const refreshImageUrl = useCallback(async () => {
+    // If the URL is a presigned URL and it's failing, get a new one
+    if (imageUrl.includes('X-Amz-Expires') && !isLoaded) {
+      try {
+        // Extract the key from the URL or use the original key
+        const key = image.url;
+        // Use our API endpoint to get a fresh URL
+        const response = await fetch(`/api/images/refresh?key=${encodeURIComponent(key)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setImageUrl(data.url);
+        }
+      } catch (error) {
+        console.error("Failed to refresh image URL:", error);
+        // Fallback to our image processing API
+        setImageUrl(getImageUrl(image.url));
+      }
+    }
+  }, [image.url, imageUrl, isLoaded]);
 
   // Update the URL generation function to handle paths more robustly
   const getImageUrl = (url: string, width = 500) => {
@@ -42,33 +64,47 @@ export default function Images({
     }
   };
 
-  const formattedImage = {
-    ...image,
-    url: image.imageUrl || getImageUrl(image.url),
-  };
-
   useEffect(() => {
     const loadImageDimensions = async () => {
       const loadImage = () =>
-        new Promise<ImageWithDimensions>((resolve) => {
+        new Promise<ImageWithDimensions>((resolve, reject) => {
           const img = new Image();
+          
           img.onload = () => {
             resolve({
-              ...formattedImage,
+              url: imageUrl,
+              name: image.name,
               width: img.width,
               height: img.height,
               aspectRatio: img.width > img.height ? "landscape" : "portrait",
             });
+            setIsLoaded(true);
           };
-          img.src = formattedImage.url;
+          
+          img.onerror = () => {
+            // If image fails to load, try to refresh the URL
+            refreshImageUrl();
+            reject(new Error("Failed to load image"));
+          };
+          
+          img.src = imageUrl;
         });
 
-      const processedImage = await loadImage();
-      setProcessedImage(processedImage);
+      try {
+        const processedImage = await loadImage();
+        setProcessedImage(processedImage);
+      } catch (error) {
+        console.error("Error loading image:", error);
+      }
     };
 
-    loadImageDimensions();
-  }, [formattedImage]);
+    if (imageUrl) {
+      loadImageDimensions();
+    } else {
+      // If no imageUrl is available, use our API
+      setImageUrl(getImageUrl(image.url));
+    }
+  }, [imageUrl, refreshImageUrl, image.name, image.url]);
 
   if (!processedImage) {
     return (
@@ -98,6 +134,7 @@ export default function Images({
           alt={processedImage.name}
           data-loaded={isLoaded}
           onLoad={() => setIsLoaded(true)}
+          onError={() => refreshImageUrl()}
           className={cn(
             "h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm",
             "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
