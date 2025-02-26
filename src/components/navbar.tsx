@@ -64,7 +64,7 @@ export default function Navbar() {
         "pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto pb-4 flex origin-bottom h-full max-h-[4.5rem]",
         "transition-transform duration-300",
         // Apply transform when shouldHideNavbar is true and viewport is small
-        isBelowMd && shouldHideNavbar ? "translate-y-full" : "translate-y-0"
+        isBelowMd && shouldHideNavbar ? "translate-y-[90%]" : "translate-y-0"
       )}
     >
       <div className="fixed bottom-0 inset-x-0 h-16 w-full bg-background to-transparent backdrop-blur-lg [-webkit-mask-image:linear-gradient(to_top,black,transparent)] dark:bg-background"></div>
