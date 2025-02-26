@@ -10,12 +10,7 @@ interface ImageWithDimensions {
   aspectRatio: "landscape" | "portrait";
 }
 
-export default function Images({
-  image,
-  index,
-  bottomRowIndices,
-  setSelectedPhoto,
-}: {
+interface ImageProps {
   image: {
     imageUrl: string;
     url: string;
@@ -24,7 +19,16 @@ export default function Images({
   index: number;
   bottomRowIndices: number[];
   setSelectedPhoto: (index: number) => void;
-}) {
+  onImageLoaded?: () => void;
+}
+
+export default function Images({
+  image,
+  index,
+  bottomRowIndices,
+  setSelectedPhoto,
+  onImageLoaded,
+}: ImageProps) {
   const [processedImage, setProcessedImage] =
     useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -106,6 +110,12 @@ export default function Images({
     }
   }, [imageUrl, refreshImageUrl, image.name, image.url]);
 
+  // Add this to the onLoad handler
+  const handleImageLoaded = () => {
+    setIsLoaded(true);
+    onImageLoaded?.();  // Call the callback when image loads
+  };
+
   if (!processedImage) {
     return (
       <li className="grow w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm" />
@@ -133,7 +143,7 @@ export default function Images({
           height={processedImage.height}
           alt={processedImage.name}
           data-loaded={isLoaded}
-          onLoad={() => setIsLoaded(true)}
+          onLoad={handleImageLoaded}  // Updated handler
           onError={() => refreshImageUrl()}
           className={cn(
             "h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm",

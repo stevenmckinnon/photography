@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 
 import NextImage from "@/components/image";
@@ -31,7 +31,13 @@ export default function ImageGrid() {
   const [photos, setPhotos] = useState<Image[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
   const [bottomRowIndices, setBottomRowIndices] = useState<number[]>([]);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
   const { isBelowMd } = useBreakpoint("md");
+
+  // Increment loaded images counter
+  const handleImageLoaded = useCallback(() => {
+    setImagesLoaded(count => count + 1);
+  }, []);
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -65,42 +71,54 @@ export default function ImageGrid() {
       : photos;
   }, [photos]);
 
+  const detectBottomRow = useCallback(() => {
+    if (isBelowMd) return;
+    
+    const container = document.querySelector("ul");
+    if (!container) return;
+
+    const items = container.querySelectorAll("li");
+    if (!items.length) return;
+
+    const bottomIndices: number[] = [];
+    let lastBottom = 0;
+
+    items.forEach((item, index) => {
+      const rect = item.getBoundingClientRect();
+      if (rect.bottom > lastBottom) {
+        bottomIndices.length = 0;
+        lastBottom = rect.bottom;
+      }
+      if (Math.abs(rect.bottom - lastBottom) < 1) {
+        bottomIndices.push(index);
+      }
+    });
+
+    setBottomRowIndices(bottomIndices);
+  }, [isBelowMd]);
+
+  // Run on initial load
   useEffect(() => {
-    const detectBottomRow = () => {
-      if (isBelowMd) return;
-      const container = document.querySelector("ul");
-      if (!container) return;
+    const timeoutId = setTimeout(detectBottomRow, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [detectBottomRow]);
 
-      const items = container.querySelectorAll("li");
-      const bottomIndices: number[] = [];
-      let lastBottom = 0;
+  // Run when all images have loaded
+  useEffect(() => {
+    if (imagesLoaded > 0 && imagesLoaded >= sortedPhotos.length) {
+      setTimeout(detectBottomRow, 300);
+    }
+  }, [imagesLoaded, sortedPhotos.length, detectBottomRow]);
 
-      items.forEach((item, index) => {
-        const rect = item.getBoundingClientRect();
-        if (rect.bottom > lastBottom) {
-          bottomIndices.length = 0;
-          lastBottom = rect.bottom;
-        }
-        if (Math.abs(rect.bottom - lastBottom) < 1) {
-          bottomIndices.push(index);
-        }
-      });
-
-      setBottomRowIndices(bottomIndices);
-    };
-
-    // Add a small delay to ensure images have had a chance to layout
-    const timeoutId = setTimeout(detectBottomRow, 500);
-
-    // Add resize listener
-    const handleResize = debounce(detectBottomRow, 100);
+  // Add resize listener
+  useEffect(() => {
+    const handleResize = debounce(detectBottomRow, 200);
     window.addEventListener("resize", handleResize);
 
     return () => {
-      clearTimeout(timeoutId);
       window.removeEventListener("resize", handleResize);
     };
-  }, [sortedPhotos, isBelowMd]);
+  }, [detectBottomRow]);
 
   function debounce(fn: Function, ms: number) {
     let timer: NodeJS.Timeout;
@@ -144,6 +162,7 @@ export default function ImageGrid() {
             index={index}
             bottomRowIndices={bottomRowIndices}
             setSelectedPhoto={setSelectedPhoto}
+            onImageLoaded={handleImageLoaded}
           />
         ))}
       </ul>
@@ -159,7 +178,7 @@ export default function ImageGrid() {
                   className="flex items-center justify-center"
                 >
                   <img
-                    src={getImageUrl(photo.url)}
+                    src={photo.imageUrl || getImageUrl(photo.url)}
                     alt={photo.name}
                     className="max-w-full max-h-[85vh] object-contain"
                   />
