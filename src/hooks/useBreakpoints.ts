@@ -1,25 +1,26 @@
 import { useMediaQuery } from "react-responsive";
-import resolveConfig from "tailwindcss/resolveConfig";
-import { Config } from "tailwindcss/types/config";
 
-import tailwindConfig from "../../tailwind.config"; // Your tailwind config
-
-const fullConfig = resolveConfig(tailwindConfig as unknown as Config);
-
-const breakpoints = fullConfig?.theme?.screens || {
+// Define breakpoints with proper typing
+const breakpoints = {
   xs: "480px",
   sm: "640px",
   md: "768px",
   lg: "1024px",
   xl: "1280px",
+  "2xl": "1536px",
 };
 
+type BreakpointKey = keyof typeof breakpoints;
+
 const useBreakpoint = <K extends string>(breakpointKey: K) => {
+  // Ensure breakpointKey exists in our breakpoints
   const breakpointValue =
-    breakpoints[breakpointKey as keyof typeof breakpoints];
+    breakpoints[breakpointKey as unknown as BreakpointKey] || "640px";
+
   const bool = useMediaQuery({
     query: `(max-width: ${breakpointValue})`,
   });
+
   const capitalizedKey =
     breakpointKey[0].toUpperCase() + breakpointKey.substring(1);
 

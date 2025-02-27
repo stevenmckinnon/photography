@@ -52,7 +52,7 @@ export type ContactFormData = z.infer<typeof schema>;
 const BLUR_FADE_DELAY = 0.04;
 // Common input styles
 const inputStyles = cn(
-  "h-11 bg-background/50 backdrop-blur-sm transition-all duration-200",
+  "h-11 bg-background/50 backdrop-blur-xs transition-all duration-200",
   "focus:ring-2 ring-offset-2 ring-offset-background"
 );
 
@@ -139,7 +139,7 @@ const Page = () => {
         {/* Form Section */}
         <Form {...form}>
           <BlurFade delay={BLUR_FADE_DELAY * 2}>
-            <div className="bg-card/50 backdrop-blur-sm rounded-lg p-6 shadow-lg border relative overflow-hidden">
+            <div className="bg-card/50 backdrop-blur-xs rounded-lg p-6 shadow-lg border relative overflow-hidden">
               {/* Form Progress Indicator */}
               <div className="w-full bg-muted h-1 rounded-full overflow-hidden absolute top-0 left-0">
                 <div
@@ -297,7 +297,7 @@ const Page = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 transition-all duration-200"
+                  className="w-full sm:w-auto bg-linear-to-r from-primary to-primary/80 hover:opacity-90 transition-all duration-200"
                 >
                   {loading ? (
                     <div className="flex items-center space-x-2">

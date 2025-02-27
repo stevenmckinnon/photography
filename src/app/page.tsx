@@ -22,7 +22,7 @@ export default function Page() {
       <section id="contact">
         <div className="grid items-center justify-center gap-4 px-4 text-center md:px-6 w-full py-12">
           <BlurFade delay={BLUR_FADE_DELAY * 10}>
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3 items-center">
               <h2 className="text-2xl font-bold tracking-tighter sm:text-4xl">
                 Want to work together?
               </h2>

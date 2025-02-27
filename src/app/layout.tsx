@@ -71,7 +71,7 @@ export default function RootLayout({
         <div className="min-h-screen bg-background font-sans antialiased max-w-7xl mx-auto py-12 sm:py-24 px-6">
           <ThemeProvider enableSystem attribute="class" defaultTheme="light">
             <TooltipProvider delayDuration={0}>
-              <ScrollProgress className="top-[0]" />
+              <ScrollProgress className="top-0" />
               <main className="flex flex-col h-full space-y-10">
                 <section id="hero">
                   <div className="mx-auto w-full max-w-2xl space-y-8">

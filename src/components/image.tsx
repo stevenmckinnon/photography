@@ -129,7 +129,7 @@ export default function Images({
         processedImage.aspectRatio === "landscape"
           ? "sm:h-[300px] sm:w-[400px]"
           : "sm:h-[300px] sm:w-[200px]"
-      } ${bottomRowIndices.includes(index) ? "!grow-0" : ""}`}
+      } ${bottomRowIndices.includes(index) ? "grow-0!" : ""}`}
     >
       <button
         onClick={() => setSelectedPhoto(index)}

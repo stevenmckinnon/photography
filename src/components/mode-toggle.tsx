@@ -18,7 +18,7 @@ export const ModeToggle = forwardRef<HTMLButtonElement>((_, ref) => {
       className={cn(
         buttonVariants({ variant: "ghost", size: "icon" }),
         "size-12",
-        "rounded-tr-[290px] rounded-tl-md rounded-bl-md rounded-br-[290px]"
+        "rounded-tr-[290px] rounded-tl-md rounded-bl-md rounded-br-[290px] cursor-pointer"
       )}
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >

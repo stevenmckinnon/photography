@@ -11,10 +11,8 @@ const s3Client = new S3Client({
   },
 });
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   try {
     // Get path parameters
     const path = params.path.join('/');
