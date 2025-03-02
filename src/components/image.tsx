@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 
 interface ImageWithDimensions {
   url: string;
+  webpUrl?: string | null;
   name: string;
   width: number;
   height: number;
@@ -13,6 +14,7 @@ interface ImageWithDimensions {
 interface ImageProps {
   image: {
     imageUrl: string;
+    webpUrl?: string | null;
     url: string;
     name: string;
   };
@@ -33,6 +35,7 @@ export default function Images({
     useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>(image.imageUrl || "");
+  const [webpUrl, setWebpUrl] = useState<string | null>(image.webpUrl || null);
   const [errorCount, setErrorCount] = useState(0);
   
   // Function to refresh the image URL if needed
@@ -51,20 +54,24 @@ export default function Images({
           const data = await response.json();
           console.log(`New URL for ${image.name}:`, data.url);
           setImageUrl(data.url);
+          setWebpUrl(data.webpUrl || null);
         } else {
           // If refresh fails, fall back to our image processing API
           console.log(`Refresh failed for ${image.name}, using image processing API`);
           setImageUrl(getImageUrl(image.url));
+          setWebpUrl(null); // Reset WebP URL as we're using the API
         }
       } catch (error) {
         console.error("Failed to refresh image URL:", error);
         // Fallback to our image processing API
         setImageUrl(getImageUrl(image.url));
+        setWebpUrl(null); // Reset WebP URL as we're using the API
       }
     } else if (errorCount >= 3) {
       // After 3 attempts, just use the image processing API
       console.log(`Max retries reached for ${image.name}, using image processing API`);
       setImageUrl(getImageUrl(image.url));
+      setWebpUrl(null); // Reset WebP URL as we're using the API
     }
   }, [image.url, image.name, isLoaded, errorCount]);
 
@@ -90,6 +97,7 @@ export default function Images({
           img.onload = () => {
             resolve({
               url: imageUrl,
+              webpUrl: webpUrl,
               name: image.name,
               width: img.width,
               height: img.height,
@@ -121,8 +129,9 @@ export default function Images({
     } else {
       // If no imageUrl is available, use our API
       setImageUrl(getImageUrl(image.url));
+      setWebpUrl(null); // Reset WebP URL as we're using the API
     }
-  }, [imageUrl, refreshImageUrl, image.name, image.url]);
+  }, [imageUrl, refreshImageUrl, image.name, image.url, webpUrl]);
 
   // Add this to the onLoad handler
   const handleImageLoaded = () => {
@@ -139,7 +148,7 @@ export default function Images({
   return (
     <li
       key={processedImage.name}
-      className={`grow w-full h-auto ${
+      className={`grow w-full h-auto cursor-pointer ${
         processedImage.aspectRatio === "landscape"
           ? "sm:h-[300px] sm:w-[400px]"
           : "sm:h-[300px] sm:w-[200px]"
@@ -151,19 +160,24 @@ export default function Images({
         aria-label={`View ${processedImage.name}`}
         role="button"
       >
-        <img
-          src={processedImage.url}
-          width={processedImage.width}
-          height={processedImage.height}
-          alt={processedImage.name}
-          data-loaded={isLoaded}
-          onLoad={handleImageLoaded}
-          onError={() => refreshImageUrl()}
-          className={cn(
-            "h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm",
-            "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+        <picture>
+          {processedImage.webpUrl && (
+            <source srcSet={processedImage.webpUrl} type="image/webp" />
           )}
-        />
+          <img
+            src={processedImage.url}
+            width={processedImage.width}
+            height={processedImage.height}
+            alt={processedImage.name}
+            data-loaded={isLoaded}
+            onLoad={handleImageLoaded}
+            onError={() => refreshImageUrl()}
+            className={cn(
+              "h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm",
+              "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+            )}
+          />
+        </picture>
       </button>
     </li>
   );

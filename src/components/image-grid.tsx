@@ -25,6 +25,8 @@ type Image = {
   name: string;
   url: string;
   imageUrl: string;
+  webpUrl?: string | null;
+  hasWebP?: boolean;
 };
 
 export default function ImageGrid() {
@@ -54,8 +56,13 @@ export default function ImageGrid() {
   const sortedPhotos = useMemo(() => {
     return imageSortOrder
       ? [...photos].sort((a, b) => {
-          const aIndex = imageSortOrder.indexOf(a.name);
-          const bIndex = imageSortOrder.indexOf(b.name);
+          // Find the first sortOrder entry that includes this image name
+          const aIndex = imageSortOrder.findIndex(sortName => 
+            a.name.includes(sortName) || sortName.includes(a.name)
+          );
+          const bIndex = imageSortOrder.findIndex(sortName => 
+            b.name.includes(sortName) || sortName.includes(b.name)
+          );
 
           // If both items are in sortOrder, sort by their position
           if (aIndex !== -1 && bIndex !== -1) {
@@ -183,11 +190,16 @@ export default function ImageGrid() {
                   key={photo.name}
                   className="flex items-center justify-center"
                 >
-                  <img
-                    src={photo.imageUrl || getImageUrl(photo.url)}
-                    alt={photo.name}
-                    className="max-w-full max-h-[85vh] object-contain"
-                  />
+                  <picture>
+                    {photo.webpUrl && (
+                      <source srcSet={photo.webpUrl} type="image/webp" />
+                    )}
+                    <img
+                      src={photo.imageUrl || getImageUrl(photo.url)}
+                      alt={photo.name}
+                      className="max-w-full max-h-[85vh] object-contain"
+                    />
+                  </picture>
                 </CarouselItem>
               ))}
             </CarouselContent>
