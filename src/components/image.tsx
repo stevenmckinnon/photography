@@ -34,26 +34,29 @@ export default function Images({
   const [isLoaded, setIsLoaded] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>(image.imageUrl || "");
   const [errorCount, setErrorCount] = useState(0);
-  
+
   // Function to refresh the image URL if needed
   const refreshImageUrl = useCallback(async () => {
     // If the URL is failing to load, try to get a fresh URL
     if (!isLoaded && errorCount < 3) {
       try {
-        setErrorCount(prev => prev + 1);
-        console.log(`Refreshing URL for ${image.name}, attempt ${errorCount + 1}`);
-        
+        setErrorCount((prev) => prev + 1);
+        console.log(
+          `Refreshing URL for ${image.name}, attempt ${errorCount + 1}`
+        );
+
         // Extract the key from the URL or use the original key
         const key = image.url;
         // Use our API endpoint to get a fresh URL
-        const response = await fetch(`/api/images/refresh?key=${encodeURIComponent(key)}`);
+        const response = await fetch(
+          `/api/images/refresh?key=${encodeURIComponent(key)}`
+        );
         if (response.ok) {
           const data = await response.json();
           console.log(`New URL for ${image.name}:`, data.url);
           setImageUrl(data.url);
         } else {
           // If refresh fails, fall back to our image processing API
-          console.log(`Refresh failed for ${image.name}, using image processing API`);
           setImageUrl(getImageUrl(image.url));
         }
       } catch (error) {
@@ -63,7 +66,9 @@ export default function Images({
       }
     } else if (errorCount >= 3) {
       // After 3 attempts, just use the image processing API
-      console.log(`Max retries reached for ${image.name}, using image processing API`);
+      console.log(
+        `Max retries reached for ${image.name}, using image processing API`
+      );
       setImageUrl(getImageUrl(image.url));
     }
   }, [image.url, image.name, isLoaded, errorCount]);
@@ -86,7 +91,7 @@ export default function Images({
       const loadImage = () =>
         new Promise<ImageWithDimensions>((resolve, reject) => {
           const img = new Image();
-          
+
           img.onload = () => {
             resolve({
               url: imageUrl,
@@ -97,14 +102,16 @@ export default function Images({
             });
             setIsLoaded(true);
           };
-          
+
           img.onerror = () => {
             // If image fails to load, try to refresh the URL
-            console.error(`Error loading image: ${image.name} from ${imageUrl}`);
+            console.error(
+              `Error loading image: ${image.name} from ${imageUrl}`
+            );
             refreshImageUrl();
             reject(new Error("Failed to load image"));
           };
-          
+
           img.src = imageUrl;
         });
 
@@ -127,7 +134,7 @@ export default function Images({
   // Add this to the onLoad handler
   const handleImageLoaded = () => {
     setIsLoaded(true);
-    onImageLoaded?.();  // Call the callback when image loads
+    onImageLoaded?.(); // Call the callback when image loads
   };
 
   if (!processedImage) {
@@ -160,7 +167,7 @@ export default function Images({
           onLoad={handleImageLoaded}
           onError={() => refreshImageUrl()}
           className={cn(
-            "h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm",
+            "cursor-pointer h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-all rounded-sm",
             "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
           )}
         />

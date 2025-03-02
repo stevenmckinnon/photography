@@ -36,7 +36,7 @@ export default function ImageGrid() {
 
   // Increment loaded images counter
   const handleImageLoaded = useCallback(() => {
-    setImagesLoaded(count => count + 1);
+    setImagesLoaded((count) => count + 1);
   }, []);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function ImageGrid() {
 
   const detectBottomRow = useCallback(() => {
     if (isBelowMd) return;
-    
+
     const container = document.querySelector("ul");
     if (!container) return;
 
@@ -144,10 +144,10 @@ export default function ImageGrid() {
   const getImageUrl = (url: string, width = 800) => {
     try {
       // If it's already a full URL with http/https, use it directly
-      if (url.startsWith('http')) {
+      if (url.startsWith("http")) {
         return url;
       }
-      
+
       // Otherwise, extract just the filename and use our API
       const filename = url.includes("/") ? url.split("/").pop() || url : url;
       const encodedPath = encodeURIComponent(filename);

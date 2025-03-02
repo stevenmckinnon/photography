@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production" ? ["error", "warn"] : false,
+  },
   env: {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     AWS_REGION: process.env.AWS_REGION,
