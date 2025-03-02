@@ -34,47 +34,18 @@ export async function GET() {
       return NextResponse.json({ images: [] });
     }
 
-    // Group files by their base name (without extension)
-    const fileGroups: Record<string, { original: string; webp?: string }> = {};
-    
-    data.Contents.forEach((object) => {
-      if (!object.Key) return;
-      
-      const key = object.Key;
-      const isWebP = key.toLowerCase().endsWith('.webp');
-      const extension = key.substring(key.lastIndexOf('.'));
-      const baseName = key.substring(0, key.lastIndexOf('.'));
-      
-      if (!fileGroups[baseName]) {
-        fileGroups[baseName] = { original: key };
-      }
-      
-      if (isWebP) {
-        fileGroups[baseName].webp = key;
-      } else if (!fileGroups[baseName].original || extension.toLowerCase() !== '.webp') {
-        // Prefer non-webp as the original fallback
-        fileGroups[baseName].original = key;
-      }
-    });
-
     // Create an array of objects with the image details and CloudFront URLs
-    const images = Object.entries(fileGroups)
-      .map(([baseName, files]) => {
-        const originalKey = files.original;
-        const webpKey = files.webp;
+    const images = data.Contents
+      .map((object) => {
+        if (!object.Key) return null;
         
-        if (!originalKey) return null;
-        
-        // Generate CloudFront URLs with proper encoding
-        const originalUrl = `${cloudfrontUrl}/${encodeURIComponent(originalKey)}`;
-        const webpUrl = webpKey ? `${cloudfrontUrl}/${encodeURIComponent(webpKey)}` : null;
+        // Generate CloudFront URL with proper encoding
+        const imageUrl = `${cloudfrontUrl}/${encodeURIComponent(object.Key)}`;
         
         return {
-          name: baseName,
-          url: originalKey, // Keep the original key for reference
-          imageUrl: originalUrl, // Original image URL (jpg/png)
-          webpUrl: webpUrl, // WebP version URL if available
-          hasWebP: !!webpUrl,
+          name: object.Key,
+          url: object.Key, // Keep the key for reference
+          imageUrl: imageUrl, // Use CloudFront URL for direct access
         };
       })
       .filter(Boolean);
