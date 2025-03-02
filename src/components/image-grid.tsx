@@ -143,9 +143,15 @@ export default function ImageGrid() {
 
   const getImageUrl = (url: string, width = 800) => {
     try {
-      // If it's already a full URL, extract just the filename
+      // If it's already a full URL with http/https, use it directly
+      if (url.startsWith('http')) {
+        return url;
+      }
+      
+      // Otherwise, extract just the filename and use our API
       const filename = url.includes("/") ? url.split("/").pop() || url : url;
-      return `/api/images/${filename}?width=${width}&quality=85`;
+      const encodedPath = encodeURIComponent(filename);
+      return `/api/images/${encodedPath}?width=${width}&quality=85`;
     } catch (e) {
       console.error("Error formatting image URL:", e);
       return url; // Fallback to original URL

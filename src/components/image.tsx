@@ -33,27 +33,40 @@ export default function Images({
     useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>(image.imageUrl || "");
+  const [errorCount, setErrorCount] = useState(0);
   
   // Function to refresh the image URL if needed
   const refreshImageUrl = useCallback(async () => {
-    // If the URL is a presigned URL and it's failing, get a new one
-    if (imageUrl.includes('X-Amz-Expires') && !isLoaded) {
+    // If the URL is failing to load, try to get a fresh URL
+    if (!isLoaded && errorCount < 3) {
       try {
+        setErrorCount(prev => prev + 1);
+        console.log(`Refreshing URL for ${image.name}, attempt ${errorCount + 1}`);
+        
         // Extract the key from the URL or use the original key
         const key = image.url;
         // Use our API endpoint to get a fresh URL
         const response = await fetch(`/api/images/refresh?key=${encodeURIComponent(key)}`);
         if (response.ok) {
           const data = await response.json();
+          console.log(`New URL for ${image.name}:`, data.url);
           setImageUrl(data.url);
+        } else {
+          // If refresh fails, fall back to our image processing API
+          console.log(`Refresh failed for ${image.name}, using image processing API`);
+          setImageUrl(getImageUrl(image.url));
         }
       } catch (error) {
         console.error("Failed to refresh image URL:", error);
         // Fallback to our image processing API
         setImageUrl(getImageUrl(image.url));
       }
+    } else if (errorCount >= 3) {
+      // After 3 attempts, just use the image processing API
+      console.log(`Max retries reached for ${image.name}, using image processing API`);
+      setImageUrl(getImageUrl(image.url));
     }
-  }, [image.url, imageUrl, isLoaded]);
+  }, [image.url, image.name, isLoaded, errorCount]);
 
   // Update the URL generation function to handle paths more robustly
   const getImageUrl = (url: string, width = 500) => {
@@ -87,6 +100,7 @@ export default function Images({
           
           img.onerror = () => {
             // If image fails to load, try to refresh the URL
+            console.error(`Error loading image: ${image.name} from ${imageUrl}`);
             refreshImageUrl();
             reject(new Error("Failed to load image"));
           };
@@ -143,7 +157,7 @@ export default function Images({
           height={processedImage.height}
           alt={processedImage.name}
           data-loaded={isLoaded}
-          onLoad={handleImageLoaded}  // Updated handler
+          onLoad={handleImageLoaded}
           onError={() => refreshImageUrl()}
           className={cn(
             "h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-opacity rounded-sm",

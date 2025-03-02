@@ -10,6 +10,7 @@ const nextConfig = {
     IMGIX_URL: process.env.IMGIX_URL,
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+    AWS_CLOUDFRONT_URL: process.env.AWS_CLOUDFRONT_URL,
   },
   images: {
     remotePatterns: [
@@ -22,6 +23,12 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: process.env.IMGIX_URL.split("//")[1],
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: process.env.AWS_CLOUDFRONT_URL.split("//")[1],
         port: "",
         pathname: "/**",
       },

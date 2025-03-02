@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { S3, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3 } from "@aws-sdk/client-s3";
 
 export async function GET() {
   if (
     !process.env.AWS_REGION ||
     !process.env.AWS_ACCESS_KEY_ID ||
     !process.env.AWS_SECRET_ACCESS_KEY ||
-    !process.env.AWS_BUCKET_NAME
+    !process.env.AWS_BUCKET_NAME ||
+    !process.env.AWS_CLOUDFRONT_URL
   ) {
     console.error("Missing AWS credentials or configuration");
     return new NextResponse("Server configuration error", { status: 500 });
@@ -22,6 +22,10 @@ export async function GET() {
   });
 
   const bucketName = process.env.AWS_BUCKET_NAME;
+  // Ensure CloudFront URL doesn't end with a slash
+  const cloudfrontUrl = process.env.AWS_CLOUDFRONT_URL.endsWith('/')
+    ? process.env.AWS_CLOUDFRONT_URL.slice(0, -1)
+    : process.env.AWS_CLOUDFRONT_URL;
 
   try {
     const data = await s3Client.listObjects({ Bucket: bucketName! });
@@ -30,26 +34,21 @@ export async function GET() {
       return NextResponse.json({ images: [] });
     }
 
-    // Create an array of objects with the image details and presigned URLs
-    const images = await Promise.all(
-      data.Contents.map(async (object) => {
+    // Create an array of objects with the image details and CloudFront URLs
+    const images = data.Contents
+      .map((object) => {
         if (!object.Key) return null;
         
-        // Create a presigned URL that will work for direct access
-        const command = new GetObjectCommand({
-          Bucket: bucketName,
-          Key: object.Key,
-        });
-        
-        const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // URL valid for 1 hour
+        // Generate CloudFront URL with proper encoding
+        const imageUrl = `${cloudfrontUrl}/${encodeURIComponent(object.Key)}`;
         
         return {
           name: object.Key,
           url: object.Key, // Keep the key for reference
-          imageUrl: url, // Add the presigned URL for direct access
+          imageUrl: imageUrl, // Use CloudFront URL for direct access
         };
       })
-    ).then(results => results.filter(Boolean));
+      .filter(Boolean);
 
     return NextResponse.json({ images });
   } catch (error) {
