@@ -82,6 +82,7 @@ export default function Navbar() {
                   )}
                 >
                   <item.icon className="size-4" />
+                  <span className="sr-only">{item.label}</span>
                 </Link>
               </TooltipTrigger>
               <TooltipContent>
@@ -103,8 +104,11 @@ export default function Navbar() {
                       buttonVariants({ variant: "ghost", size: "icon" }),
                       "size-12"
                     )}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     <social.icon className="size-4" />
+                    <span className="sr-only">{social.name}</span>
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
