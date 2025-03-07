@@ -1,7 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
-import NextImage from "next/image";
 
 interface ImageWithDimensions {
   url: string;
@@ -23,13 +22,13 @@ interface ImageProps {
   onImageLoaded?: () => void;
 }
 
-const Image = ({
+export default function Images({
   image,
   index,
   bottomRowIndices,
   setSelectedPhoto,
   onImageLoaded,
-}: ImageProps) => {
+}: ImageProps) {
   const [processedImage, setProcessedImage] =
     useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -91,7 +90,7 @@ const Image = ({
     const loadImageDimensions = async () => {
       const loadImage = () =>
         new Promise<ImageWithDimensions>((resolve, reject) => {
-          const img = new globalThis.Image();
+          const img = new Image();
 
           img.onload = () => {
             resolve({
@@ -159,27 +158,20 @@ const Image = ({
         aria-label={`View ${processedImage.name}`}
         role="button"
       >
-        <div className="relative h-full w-full">
-          <NextImage
-            src={processedImage.url}
-            alt={processedImage.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            priority={index < 4} // Load the first 4 images with priority
-            loading={index < 4 ? "eager" : "lazy"}
-            quality={80}
-            onLoad={handleImageLoaded}
-            onError={() => refreshImageUrl()}
-            className={cn(
-              "cursor-pointer object-cover hover:opacity-90 transition-all rounded-sm",
-              "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
-            )}
-            data-loaded={isLoaded}
-          />
-        </div>
+        <img
+          src={processedImage.url}
+          width={processedImage.width}
+          height={processedImage.height}
+          alt={processedImage.name}
+          data-loaded={isLoaded}
+          onLoad={handleImageLoaded}
+          onError={() => refreshImageUrl()}
+          className={cn(
+            "cursor-pointer h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-all rounded-sm",
+            "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+          )}
+        />
       </button>
     </li>
   );
-};
-
-export default Image;
+}
