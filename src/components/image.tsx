@@ -139,7 +139,13 @@ export default function Images({
 
   if (!processedImage) {
     return (
-      <li className="grow w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm" />
+      <li
+        className={`grow w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm ${
+          Math.random() < 0.5
+            ? "sm:h-[300px] sm:w-[400px]"
+            : "sm:h-[300px] sm:w-[200px]"
+        }`}
+      />
     );
   }
 

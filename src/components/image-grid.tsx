@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Loader2 } from "lucide-react";
 
 import NextImage from "@/components/image";
 import { imageSortOrder } from "@/data/sortOrder";
@@ -127,13 +126,6 @@ export default function ImageGrid() {
       timer = setTimeout(() => fn.apply(this, args), ms);
     };
   }
-
-  if (!photos?.length)
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-4 h-4 animate-spin" />
-      </div>
-    );
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
