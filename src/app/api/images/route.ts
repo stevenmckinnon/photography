@@ -1,58 +1,35 @@
 import { NextResponse } from "next/server";
-import { S3 } from "@aws-sdk/client-s3";
+import { listImages } from "@/lib/cloudinary";
 
 export async function GET() {
-  if (
-    !process.env.AWS_REGION ||
-    !process.env.AWS_ACCESS_KEY_ID ||
-    !process.env.AWS_SECRET_ACCESS_KEY ||
-    !process.env.AWS_BUCKET_NAME ||
-    !process.env.AWS_CLOUDFRONT_URL
-  ) {
-    console.error("Missing AWS credentials or configuration");
+  if (!process.env.CLOUDINARY_URL) {
+    console.error("Missing Cloudinary URL configuration");
     return new NextResponse("Server configuration error", { status: 500 });
   }
 
-  const s3Client = new S3({
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-  });
-
-  const bucketName = process.env.AWS_BUCKET_NAME;
-  // Ensure CloudFront URL doesn't end with a slash
-  const cloudfrontUrl = process.env.AWS_CLOUDFRONT_URL.endsWith('/')
-    ? process.env.AWS_CLOUDFRONT_URL.slice(0, -1)
-    : process.env.AWS_CLOUDFRONT_URL;
-
   try {
-    const data = await s3Client.listObjects({ Bucket: bucketName! });
+    const images = await listImages();
 
-    if (!data.Contents) {
-      return NextResponse.json({ images: [] });
-    }
+    // Transform Cloudinary images to match the expected format
+    const transformedImages = images.map((image) => {
+      // Strip Cloudinary random ID suffix (e.g., "_n6q8p9") from filename
+      let cleanName = image.original_filename || image.public_id.split('/').pop() || image.public_id;
+      
+      // Remove Cloudinary suffix pattern (underscore followed by 6 alphanumeric characters)
+      cleanName = cleanName.replace(/_[a-zA-Z0-9]{6}$/, '');
+      
+      return {
+        name: cleanName,
+        url: image.public_id,
+        imageUrl: image.secure_url,
+        width: image.width,
+        height: image.height,
+      };
+    });
 
-    // Create an array of objects with the image details and CloudFront URLs
-    const images = data.Contents
-      .map((object) => {
-        if (!object.Key) return null;
-        
-        // Generate CloudFront URL with proper encoding
-        const imageUrl = `${cloudfrontUrl}/${encodeURIComponent(object.Key)}`;
-        
-        return {
-          name: object.Key,
-          url: object.Key, // Keep the key for reference
-          imageUrl: imageUrl, // Use CloudFront URL for direct access
-        };
-      })
-      .filter(Boolean);
-
-    return NextResponse.json({ images });
+    return NextResponse.json({ images: transformedImages });
   } catch (error) {
-    console.error("Error listing images from S3:", error);
-    return new NextResponse("Error listing images from S3", { status: 500 });
+    console.error("Error listing images from Cloudinary:", error);
+    return new NextResponse("Error listing images from Cloudinary", { status: 500 });
   }
 }

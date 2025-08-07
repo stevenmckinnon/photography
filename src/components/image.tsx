@@ -12,79 +12,48 @@ interface ImageWithDimensions {
 
 interface ImageProps {
   image: {
-    imageUrl: string;
-    url: string;
     name: string;
+    url: string;
+    imageUrl: string;
+    width?: number;
+    height?: number;
   };
   index: number;
-  bottomRowIndices: number[];
   setSelectedPhoto: (index: number) => void;
   onImageLoaded?: () => void;
+  style?: React.CSSProperties;
 }
 
 export default function Images({
   image,
   index,
-  bottomRowIndices,
   setSelectedPhoto,
   onImageLoaded,
+  style,
 }: ImageProps) {
   const [processedImage, setProcessedImage] =
     useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>(image.imageUrl || "");
-  const [errorCount, setErrorCount] = useState(0);
 
-  // Function to refresh the image URL if needed
-  const refreshImageUrl = useCallback(async () => {
-    // If the URL is failing to load, try to get a fresh URL
-    if (!isLoaded && errorCount < 3) {
-      try {
-        setErrorCount((prev) => prev + 1);
-        console.log(
-          `Refreshing URL for ${image.name}, attempt ${errorCount + 1}`
-        );
-
-        // Extract the key from the URL or use the original key
-        const key = image.url;
-        // Use our API endpoint to get a fresh URL
-        const response = await fetch(
-          `/api/images/refresh?key=${encodeURIComponent(key)}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`New URL for ${image.name}:`, data.url);
-          setImageUrl(data.url);
-        } else {
-          // If refresh fails, fall back to our image processing API
-          setImageUrl(getImageUrl(image.url));
-        }
-      } catch (error) {
-        console.error("Failed to refresh image URL:", error);
-        // Fallback to our image processing API
-        setImageUrl(getImageUrl(image.url));
-      }
-    } else if (errorCount >= 3) {
-      // After 3 attempts, just use the image processing API
-      console.log(
-        `Max retries reached for ${image.name}, using image processing API`
-      );
-      setImageUrl(getImageUrl(image.url));
-    }
-  }, [image.url, image.name, isLoaded, errorCount]);
-
-  // Update the URL generation function to handle paths more robustly
-  const getImageUrl = (url: string, width = 500) => {
+  // Function to get optimized image URL
+  const getOptimizedImageUrl = useCallback((url: string, width = 500) => {
     try {
-      // If it's already a full URL, extract just the filename
-      const filename = url.includes("/") ? url.split("/").pop() || url : url;
-      const encodedPath = encodeURIComponent(filename);
+      // If it's already a Cloudinary URL, add transformations
+      if (url.includes("res.cloudinary.com")) {
+        const baseUrl = url.split("/").slice(0, -1).join("/");
+        const filename = url.split("/").pop() || "";
+        return `${baseUrl}/w_${width},q_80,f_webp,c_fill/${filename}`;
+      }
+
+      // If it's a public_id, use our API
+      const encodedPath = encodeURIComponent(url);
       return `/api/images/${encodedPath}?width=${width}&quality=80`;
     } catch (e) {
       console.error("Error formatting image URL:", e);
       return url; // Fallback to original URL
     }
-  };
+  }, []);
 
   useEffect(() => {
     const loadImageDimensions = async () => {
@@ -104,11 +73,9 @@ export default function Images({
           };
 
           img.onerror = () => {
-            // If image fails to load, try to refresh the URL
             console.error(
               `Error loading image: ${image.name} from ${imageUrl}`
             );
-            refreshImageUrl();
             reject(new Error("Failed to load image"));
           };
 
@@ -127,9 +94,9 @@ export default function Images({
       loadImageDimensions();
     } else {
       // If no imageUrl is available, use our API
-      setImageUrl(getImageUrl(image.url));
+      setImageUrl(getOptimizedImageUrl(image.url));
     }
-  }, [imageUrl, refreshImageUrl, image.name, image.url]);
+  }, [imageUrl, image.name, image.url, getOptimizedImageUrl]);
 
   // Add this to the onLoad handler
   const handleImageLoaded = () => {
@@ -139,45 +106,30 @@ export default function Images({
 
   if (!processedImage) {
     return (
-      <li
-        className={`grow w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm ${
-          Math.random() < 0.5
-            ? "sm:h-[300px] sm:w-[400px]"
-            : "sm:h-[300px] sm:w-[200px]"
-        }`}
-      />
+      <div className="w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm" />
     );
   }
 
   return (
-    <li
-      key={processedImage.name}
-      className={`grow w-full h-auto ${
-        processedImage.aspectRatio === "landscape"
-          ? "sm:h-[300px] sm:w-[400px]"
-          : "sm:h-[300px] sm:w-[200px]"
-      } ${bottomRowIndices.includes(index) ? "grow-0!" : ""}`}
+    <button
+      onClick={() => setSelectedPhoto(index)}
+      className="w-full h-full"
+      aria-label={`View ${processedImage.name}`}
+      role="button"
     >
-      <button
-        onClick={() => setSelectedPhoto(index)}
-        className="h-full w-full"
-        aria-label={`View ${processedImage.name}`}
-        role="button"
-      >
-        <img
-          src={processedImage.url}
-          width={processedImage.width}
-          height={processedImage.height}
-          alt={processedImage.name}
-          data-loaded={isLoaded}
-          onLoad={handleImageLoaded}
-          onError={() => refreshImageUrl()}
-          className={cn(
-            "cursor-pointer h-full w-full max-h-full min-w-full object-cover align-bottom hover:opacity-90 transition-all rounded-sm",
-            "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
-          )}
-        />
-      </button>
-    </li>
+      <img
+        src={processedImage.url}
+        width={processedImage.width}
+        height={processedImage.height}
+        alt={processedImage.name}
+        data-loaded={isLoaded}
+        onLoad={handleImageLoaded}
+        style={style}
+        className={cn(
+          "cursor-pointer w-full h-auto object-cover hover:opacity-90 transition-all rounded-sm",
+          "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+        )}
+      />
+    </button>
   );
 }

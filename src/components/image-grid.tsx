@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
 import NextImage from "@/components/image";
 import { imageSortOrder } from "@/data/sortOrder";
@@ -24,19 +24,43 @@ type Image = {
   name: string;
   url: string;
   imageUrl: string;
+  width?: number;
+  height?: number;
 };
+
+interface PhotoRow {
+  photos: Image[];
+  rowHeight: number;
+}
 
 export default function ImageGrid() {
   const [photos, setPhotos] = useState<Image[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
-  const [bottomRowIndices, setBottomRowIndices] = useState<number[]>([]);
   const [imagesLoaded, setImagesLoaded] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { isBelowMd } = useBreakpoint("md");
 
   // Increment loaded images counter
   const handleImageLoaded = useCallback(() => {
     setImagesLoaded((count) => count + 1);
   }, []);
+
+  // Auto-detect container width
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.contentRect.width !== containerWidth) {
+          setContainerWidth(entry.contentRect.width);
+        }
+      }
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [containerWidth]);
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -53,8 +77,17 @@ export default function ImageGrid() {
   const sortedPhotos = useMemo(() => {
     return imageSortOrder
       ? [...photos].sort((a, b) => {
-          const aIndex = imageSortOrder.indexOf(a.name);
-          const bIndex = imageSortOrder.indexOf(b.name);
+          // Find the first sort order item that contains the image name
+          const aIndex = imageSortOrder.findIndex(
+            (sortItem) =>
+              a.name.toLowerCase().includes(sortItem.toLowerCase()) ||
+              sortItem.toLowerCase().includes(a.name.toLowerCase())
+          );
+          const bIndex = imageSortOrder.findIndex(
+            (sortItem) =>
+              b.name.toLowerCase().includes(sortItem.toLowerCase()) ||
+              sortItem.toLowerCase().includes(b.name.toLowerCase())
+          );
 
           // If both items are in sortOrder, sort by their position
           if (aIndex !== -1 && bIndex !== -1) {
@@ -70,62 +103,45 @@ export default function ImageGrid() {
       : photos;
   }, [photos]);
 
-  const detectBottomRow = useCallback(() => {
-    if (isBelowMd) return;
+  // Calculate rows with optimal heights
+  const rows = useMemo(() => {
+    if (containerWidth === 0 || sortedPhotos.length === 0) return [];
 
-    const container = document.querySelector("ul");
-    if (!container) return;
+    const targetRowHeight = isBelowMd ? 300 : 250; // Increased from 200 to 300 for mobile
+    const gap = isBelowMd ? 4 : 8; // Smaller gap on mobile for bigger images
+    const rows: PhotoRow[] = [];
+    let currentRow: Image[] = [];
+    let currentRowAspectSum = 0;
 
-    const items = container.querySelectorAll("li");
-    if (!items.length) return;
+    for (const photo of sortedPhotos) {
+      // Use provided dimensions or default aspect ratio
+      const aspectRatio =
+        photo.width && photo.height ? photo.width / photo.height : 1.5; // Default aspect ratio
 
-    const bottomIndices: number[] = [];
-    let lastBottom = 0;
+      currentRow.push(photo);
+      currentRowAspectSum += aspectRatio;
 
-    items.forEach((item, index) => {
-      const rect = item.getBoundingClientRect();
-      if (rect.bottom > lastBottom) {
-        bottomIndices.length = 0;
-        lastBottom = rect.bottom;
+      const rowWidth =
+        targetRowHeight * currentRowAspectSum + gap * (currentRow.length - 1);
+
+      if (rowWidth >= containerWidth) {
+        const rowHeight =
+          (containerWidth - gap * (currentRow.length - 1)) /
+          currentRowAspectSum;
+        rows.push({ photos: currentRow, rowHeight });
+        currentRow = [];
+        currentRowAspectSum = 0;
       }
-      if (Math.abs(rect.bottom - lastBottom) < 1) {
-        bottomIndices.push(index);
-      }
-    });
-
-    setBottomRowIndices(bottomIndices);
-  }, [isBelowMd]);
-
-  // Run on initial load
-  useEffect(() => {
-    const timeoutId = setTimeout(detectBottomRow, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [detectBottomRow]);
-
-  // Run when all images have loaded
-  useEffect(() => {
-    if (imagesLoaded > 0 && imagesLoaded >= sortedPhotos.length) {
-      setTimeout(detectBottomRow, 300);
     }
-  }, [imagesLoaded, sortedPhotos.length, detectBottomRow]);
 
-  // Add resize listener
-  useEffect(() => {
-    const handleResize = debounce(detectBottomRow, 200);
-    window.addEventListener("resize", handleResize);
+    // Handle the last row
+    if (currentRow.length > 0) {
+      const rowHeight = targetRowHeight;
+      rows.push({ photos: currentRow, rowHeight });
+    }
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [detectBottomRow]);
-
-  function debounce(fn: Function, ms: number) {
-    let timer: NodeJS.Timeout;
-    return function (this: any, ...args: any[]) {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn.apply(this, args), ms);
-    };
-  }
+    return rows;
+  }, [sortedPhotos, containerWidth, isBelowMd]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -135,14 +151,15 @@ export default function ImageGrid() {
 
   const getImageUrl = (url: string, width = 800) => {
     try {
-      // If it's already a full URL with http/https, use it directly
-      if (url.startsWith("http")) {
-        return url;
+      // If it's already a Cloudinary URL, add transformations
+      if (url.includes("res.cloudinary.com")) {
+        const baseUrl = url.split("/").slice(0, -1).join("/");
+        const filename = url.split("/").pop() || "";
+        return `${baseUrl}/w_${width},q_85,f_webp,c_fill/${filename}`;
       }
 
-      // Otherwise, extract just the filename and use our API
-      const filename = url.includes("/") ? url.split("/").pop() || url : url;
-      const encodedPath = encodeURIComponent(filename);
+      // If it's a public_id, use our API
+      const encodedPath = encodeURIComponent(url);
       return `/api/images/${encodedPath}?width=${width}&quality=85`;
     } catch (e) {
       console.error("Error formatting image URL:", e);
@@ -152,18 +169,50 @@ export default function ImageGrid() {
 
   return (
     <>
-      <ul className="flex flex-wrap gap-1">
-        {sortedPhotos.map((photo, index) => (
-          <NextImage
-            key={photo.name}
-            image={photo}
-            index={index}
-            bottomRowIndices={bottomRowIndices}
-            setSelectedPhoto={setSelectedPhoto}
-            onImageLoaded={handleImageLoaded}
-          />
-        ))}
-      </ul>
+      <div ref={containerRef} className="w-full">
+        <div className="flex flex-col gap-2">
+          {rows.map((row, rowIndex) => (
+            <div
+              key={rowIndex}
+              className="flex gap-2"
+              style={{ gap: isBelowMd ? "4px" : "8px" }}
+            >
+              {row.photos.map((photo) => {
+                const aspectRatio =
+                  photo.width && photo.height
+                    ? photo.width / photo.height
+                    : 1.5;
+                const imgWidth = row.rowHeight * aspectRatio;
+
+                return (
+                  <div
+                    key={photo.name}
+                    style={{
+                      width: `${imgWidth}px`,
+                      height: `${row.rowHeight}px`,
+                    }}
+                    className="relative overflow-hidden rounded-sm"
+                  >
+                    <NextImage
+                      image={photo}
+                      index={sortedPhotos.findIndex(
+                        (p) => p.name === photo.name
+                      )}
+                      setSelectedPhoto={setSelectedPhoto}
+                      onImageLoaded={handleImageLoaded}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <Dialog open={selectedPhoto > -1} onOpenChange={handleOpenChange}>
         <DialogContent className="bg-transparent border-none max-w-[90vw] max-h-[90vh]">

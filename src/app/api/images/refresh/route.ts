@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -8,23 +9,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing key parameter" }, { status: 400 });
   }
   
-  if (!process.env.AWS_CLOUDFRONT_URL) {
-    console.error("Missing CloudFront URL configuration");
+  if (!process.env.CLOUDINARY_URL) {
+    console.error("Missing Cloudinary configuration");
     return new NextResponse("Server configuration error", { status: 500 });
   }
 
   try {
-    // Ensure CloudFront URL doesn't end with a slash
-    const cloudfrontUrl = process.env.AWS_CLOUDFRONT_URL.endsWith('/')
-      ? process.env.AWS_CLOUDFRONT_URL.slice(0, -1)
-      : process.env.AWS_CLOUDFRONT_URL;
-    
-    // Generate CloudFront URL with proper encoding
-    const url = `${cloudfrontUrl}/${encodeURIComponent(key)}`;
+    // Generate optimized Cloudinary URL
+    const url = getOptimizedImageUrl(key);
     
     return NextResponse.json({ url });
   } catch (error) {
-    console.error("Error generating CloudFront URL:", error);
+    console.error("Error generating Cloudinary URL:", error);
     return NextResponse.json({ error: "Failed to generate URL" }, { status: 500 });
   }
 } 
