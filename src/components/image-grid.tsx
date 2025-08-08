@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 import NextImage from "@/components/image";
 import { imageSortOrder } from "@/data/sortOrder";
+import useBreakpoint from "@/hooks/useBreakpoints";
 
 import {
   Carousel,
@@ -18,7 +19,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "./ui/dialog";
-import useBreakpoint from "@/hooks/useBreakpoints";
+import { Skeleton } from "./ui/skeleton";
 
 type Image = {
   name: string;
@@ -36,15 +37,10 @@ interface PhotoRow {
 export default function ImageGrid() {
   const [photos, setPhotos] = useState<Image[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
-  const [imagesLoaded, setImagesLoaded] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isBelowMd } = useBreakpoint("md");
-
-  // Increment loaded images counter
-  const handleImageLoaded = useCallback(() => {
-    setImagesLoaded((count) => count + 1);
-  }, []);
 
   // Auto-detect container width
   useEffect(() => {
@@ -64,11 +60,18 @@ export default function ImageGrid() {
 
   useEffect(() => {
     const fetchPhotos = async () => {
-      const response = await fetch(`/api/images`);
-      const data = await response?.json();
-      const photos: Image[] = data.images;
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/images`);
+        const data = await response?.json();
+        const photos: Image[] = data.images;
 
-      setPhotos(photos);
+        setPhotos(photos);
+      } catch (error) {
+        console.error("Error fetching photos:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchPhotos();
@@ -170,48 +173,80 @@ export default function ImageGrid() {
   return (
     <>
       <div ref={containerRef} className="w-full">
-        <div className="flex flex-col gap-2">
-          {rows.map((row, rowIndex) => (
-            <div
-              key={rowIndex}
-              className="flex gap-2"
-              style={{ gap: isBelowMd ? "4px" : "8px" }}
-            >
-              {row.photos.map((photo) => {
-                const aspectRatio =
-                  photo.width && photo.height
-                    ? photo.width / photo.height
-                    : 1.5;
-                const imgWidth = row.rowHeight * aspectRatio;
-
-                return (
-                  <div
-                    key={photo.name}
-                    style={{
-                      width: `${imgWidth}px`,
-                      height: `${row.rowHeight}px`,
-                    }}
-                    className="relative overflow-hidden rounded-sm"
-                  >
-                    <NextImage
-                      image={photo}
-                      index={sortedPhotos.findIndex(
-                        (p) => p.name === photo.name
-                      )}
-                      setSelectedPhoto={setSelectedPhoto}
-                      onImageLoaded={handleImageLoaded}
+        {isLoading ? (
+          <div className="flex flex-col gap-2">
+            {/* Loading skeleton - show 3 rows with varying numbers of items */}
+            {[1, 2, 3].map((rowIndex) => {
+              const targetRowHeight = isBelowMd ? 300 : 250;
+              const gap = isBelowMd ? 4 : 8;
+              const itemsInRow = rowIndex === 1 ? 3 : rowIndex === 2 ? 2 : 4;
+              const itemWidth = containerWidth > 0 
+                ? (containerWidth - gap * (itemsInRow - 1)) / itemsInRow 
+                : isBelowMd ? 200 : 250;
+              
+              return (
+                <div
+                  key={rowIndex}
+                  className="flex gap-2"
+                  style={{ gap: isBelowMd ? "4px" : "8px" }}
+                >
+                  {Array.from({ length: itemsInRow }).map((_, itemIndex) => (
+                    <Skeleton
+                      key={itemIndex}
+                      className="rounded-sm flex-1"
                       style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
+                        width: `${itemWidth}px`,
+                        height: `${targetRowHeight}px`,
                       }}
                     />
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {rows.map((row, rowIndex) => (
+              <div
+                key={rowIndex}
+                className="flex gap-2"
+                style={{ gap: isBelowMd ? "4px" : "8px" }}
+              >
+                {row.photos.map((photo) => {
+                  const aspectRatio =
+                    photo.width && photo.height
+                      ? photo.width / photo.height
+                      : 1.5;
+                  const imgWidth = row.rowHeight * aspectRatio;
+
+                  return (
+                    <div
+                      key={photo.name}
+                      style={{
+                        width: `${imgWidth}px`,
+                        height: `${row.rowHeight}px`,
+                      }}
+                      className="relative overflow-hidden rounded-sm"
+                    >
+                      <NextImage
+                        image={photo}
+                        index={sortedPhotos.findIndex(
+                          (p) => p.name === photo.name
+                        )}
+                        setSelectedPhoto={setSelectedPhoto}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Dialog open={selectedPhoto > -1} onOpenChange={handleOpenChange}>
