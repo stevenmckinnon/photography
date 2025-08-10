@@ -41,6 +41,12 @@ export default function ImageGrid() {
   const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isBelowMd } = useBreakpoint("md");
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure consistent rendering between server and client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auto-detect container width
   useEffect(() => {
@@ -177,18 +183,18 @@ export default function ImageGrid() {
           <div className="flex flex-col gap-2">
             {/* Loading skeleton - show 3 rows with varying numbers of items */}
             {[1, 2, 3].map((rowIndex) => {
-              const targetRowHeight = isBelowMd ? 300 : 250;
-              const gap = isBelowMd ? 4 : 8;
-              const itemsInRow = rowIndex === 1 ? 3 : rowIndex === 2 ? 2 : 4;
-              const itemWidth = containerWidth > 0 
-                ? (containerWidth - gap * (itemsInRow - 1)) / itemsInRow 
-                : isBelowMd ? 200 : 250;
+              // Use default values until mounted to avoid hydration mismatch
+              const targetRowHeight = mounted && isBelowMd ? 250 : 200;
+              const itemsInRow = mounted && isBelowMd ? 2 : 4;
               
+              // Use fixed widths for skeleton to avoid hydration mismatch
+              const itemWidth = mounted && isBelowMd ? 200 : 250;
+
               return (
                 <div
                   key={rowIndex}
                   className="flex gap-2"
-                  style={{ gap: isBelowMd ? "4px" : "8px" }}
+                  style={{ gap: mounted && isBelowMd ? "4px" : "8px" }}
                 >
                   {Array.from({ length: itemsInRow }).map((_, itemIndex) => (
                     <Skeleton
