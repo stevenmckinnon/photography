@@ -28,7 +28,7 @@ const Page = () => {
               Message sent
             </h2>
             <p className="text-lg">
-              Thank you for getting in touch. I'll get back to you as soon as
+              Thank you for getting in touch. I&apos;ll get back to you as soon as
               possible!
             </p>
           </BlurFade>

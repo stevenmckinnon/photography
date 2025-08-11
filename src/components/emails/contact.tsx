@@ -51,7 +51,7 @@ export const ContactEmail = ({
           </Section>
           <Section style={{ paddingBottom: "20px" }}>
             <Row>
-              <Text style={heading}>Here's what {name} wrote</Text>
+              <Text style={heading}>Here&apos;s what {name} wrote</Text>
               <Text style={paragraph}>Contact email: {email}</Text>
               <Text style={paragraph}>Subject: {subject}</Text>
               <Text style={review}>{message}</Text>

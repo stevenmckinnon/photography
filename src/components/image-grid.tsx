@@ -41,19 +41,13 @@ export default function ImageGrid() {
   const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isBelowMd } = useBreakpoint("md");
-  const [mounted, setMounted] = useState(false);
-
-  // Ensure consistent rendering between server and client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Auto-detect container width
   useEffect(() => {
     if (!containerRef.current) return;
 
     const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         if (entry.contentRect.width !== containerWidth) {
           setContainerWidth(entry.contentRect.width);
         }
@@ -182,42 +176,27 @@ export default function ImageGrid() {
         {isLoading ? (
           <div className="flex flex-col gap-2">
             {/* Loading skeleton - show 3 rows with varying numbers of items */}
-            {[1, 2, 3].map((rowIndex) => {
-              // Use default values until mounted to avoid hydration mismatch
-              const targetRowHeight = mounted && isBelowMd ? 250 : 200;
-              const itemsInRow = mounted && isBelowMd ? 2 : 4;
-              
-              // Use fixed widths for skeleton to avoid hydration mismatch
-              const itemWidth = mounted && isBelowMd ? 200 : 250;
-
-              return (
-                <div
-                  key={rowIndex}
-                  className="flex gap-2"
-                  style={{ gap: mounted && isBelowMd ? "4px" : "8px" }}
-                >
-                  {Array.from({ length: itemsInRow }).map((_, itemIndex) => (
-                    <Skeleton
-                      key={itemIndex}
-                      className="rounded-sm flex-1"
-                      style={{
-                        width: `${itemWidth}px`,
-                        height: `${targetRowHeight}px`,
-                      }}
-                    />
-                  ))}
-                </div>
-              );
-            })}
+            {[1, 2, 3].map((rowIndex) => (
+              <div key={rowIndex} className="flex gap-1 md:gap-2">
+                {Array.from({ length: 2 }).map((_, itemIndex) => (
+                  <Skeleton
+                    key={itemIndex}
+                    className="rounded-sm flex-1 md:hidden w-[250px] h-[280px]"
+                  />
+                ))}
+                {Array.from({ length: 6 }).map((_, itemIndex) => (
+                  <Skeleton
+                    key={itemIndex}
+                    className="rounded-sm flex-1 hidden md:block w-[250px] h-[200px]"
+                  />
+                ))}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="flex flex-col gap-2">
             {rows.map((row, rowIndex) => (
-              <div
-                key={rowIndex}
-                className="flex gap-2"
-                style={{ gap: isBelowMd ? "4px" : "8px" }}
-              >
+              <div key={rowIndex} className="flex gap-1 md:gap-2">
                 {row.photos.map((photo) => {
                   const aspectRatio =
                     photo.width && photo.height
