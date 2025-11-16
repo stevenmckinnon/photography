@@ -1,6 +1,8 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
+  cacheComponents: true,
   env: {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     CLOUDINARY_URL: process.env.CLOUDINARY_URL,
@@ -18,7 +20,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: process.env.IMGIX_URL?.split("//")[1],
+        hostname: process.env.IMGIX_URL?.split("//")[1] as string,
         port: "",
         pathname: "/**",
       },

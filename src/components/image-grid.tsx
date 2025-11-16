@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import NextImage from "@/components/image";
 import { imageSortOrder } from "@/data/sortOrder";
@@ -11,8 +11,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
   CarouselNext,
+  CarouselPrevious,
 } from "./ui/carousel";
 import {
   Dialog,
@@ -235,7 +235,6 @@ export default function ImageGrid() {
         )}
       </div>
 
-      <AnimatePresence mode="wait">
         {selectedPhoto > -1 && (
           <Dialog
             open={true}
@@ -288,7 +287,6 @@ export default function ImageGrid() {
             </DialogContent>
           </Dialog>
         )}
-      </AnimatePresence>
     </>
   );
 }
