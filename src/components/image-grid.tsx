@@ -8,13 +8,6 @@ import { imageSortOrder } from "@/data/sortOrder";
 import useBreakpoint from "@/hooks/useBreakpoints";
 
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "./ui/carousel";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -153,6 +146,9 @@ export default function ImageGrid() {
     }
   };
 
+  const selectedImage =
+    selectedPhoto > -1 ? sortedPhotos[selectedPhoto] : null;
+
   const getImageUrl = (url: string, width = 800) => {
     try {
       // If it's already a Cloudinary URL, add transformations
@@ -235,12 +231,8 @@ export default function ImageGrid() {
         )}
       </div>
 
-        {selectedPhoto > -1 && (
-          <Dialog
-            open={true}
-            onOpenChange={handleOpenChange}
-            key="lightbox-dialog"
-          >
+        {selectedImage && (
+          <Dialog open={true} onOpenChange={handleOpenChange} key="lightbox-dialog">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -250,39 +242,29 @@ export default function ImageGrid() {
               onClick={() => handleOpenChange(false)}
             />
             <DialogContent className="bg-transparent border-none max-w-[90vw] max-h-[90vh] p-0 pointer-events-none [&>button]:pointer-events-auto [&>button]:z-[70] data-[state=open]:animate-none data-[state=closed]:animate-none z-[70]">
-              <DialogTitle className="sr-only">Photo</DialogTitle>
-              <Carousel scrollTo={selectedPhoto}>
-                <CarouselContent>
-                  {sortedPhotos.map((photo, index) => (
-                    <CarouselItem
-                      key={photo.name}
-                      className="flex items-center justify-center pointer-events-auto"
-                    >
-                      <motion.img
-                        layoutId={`photo-${index}`}
-                        layout
-                        src={photo.imageUrl || getImageUrl(photo.url)}
-                        alt={photo.name}
-                        className="max-w-full max-h-[85vh] w-auto h-auto object-contain"
-                        initial={false}
-                        style={{ willChange: "transform" }}
-                        transition={{
-                          layout: {
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 35,
-                            mass: 0.8,
-                          },
-                        }}
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
+              <DialogTitle className="sr-only">{selectedImage.name}</DialogTitle>
+              <div className="flex h-full w-full items-center justify-center pointer-events-none">
+                <motion.img
+                  layoutId={`photo-${selectedPhoto}`}
+                  layout
+                  src={selectedImage.imageUrl || getImageUrl(selectedImage.url, 1600)}
+                  alt={selectedImage.name}
+                  className="pointer-events-auto max-h-[85vh] w-auto max-w-[90vw] object-contain"
+                  initial={false}
+                  draggable={false}
+                  style={{ willChange: "transform" }}
+                  transition={{
+                    layout: {
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 35,
+                      mass: 0.8,
+                    },
+                  }}
+                />
+              </div>
               <DialogDescription className="sr-only">
-                {sortedPhotos?.[selectedPhoto]?.name}
+                {selectedImage.name}
               </DialogDescription>
             </DialogContent>
           </Dialog>
