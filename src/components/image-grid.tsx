@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { AnimatePresence, motion } from "motion/react";
 
 import NextImage from "@/components/image";
 import { imageSortOrder } from "@/data/sortOrder";
@@ -234,32 +235,60 @@ export default function ImageGrid() {
         )}
       </div>
 
-      <Dialog open={selectedPhoto > -1} onOpenChange={handleOpenChange}>
-        <DialogContent className="bg-transparent border-none max-w-[90vw] max-h-[90vh]">
-          <DialogTitle className="sr-only">Photo</DialogTitle>
-          <Carousel scrollTo={selectedPhoto}>
-            <CarouselContent>
-              {sortedPhotos.map((photo) => (
-                <CarouselItem
-                  key={photo.name}
-                  className="flex items-center justify-center"
-                >
-                  <img
-                    src={photo.imageUrl || getImageUrl(photo.url)}
-                    alt={photo.name}
-                    className="max-w-full max-h-[85vh] object-contain"
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-          <DialogDescription className="sr-only">
-            {sortedPhotos?.[selectedPhoto]?.name}
-          </DialogDescription>
-        </DialogContent>
-      </Dialog>
+      <AnimatePresence mode="wait">
+        {selectedPhoto > -1 && (
+          <Dialog
+            open={true}
+            onOpenChange={handleOpenChange}
+            key="lightbox-dialog"
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              className="fixed inset-0 z-[60] bg-black/90"
+              onClick={() => handleOpenChange(false)}
+            />
+            <DialogContent className="bg-transparent border-none max-w-[90vw] max-h-[90vh] p-0 pointer-events-none [&>button]:pointer-events-auto [&>button]:z-[70] data-[state=open]:animate-none data-[state=closed]:animate-none z-[70]">
+              <DialogTitle className="sr-only">Photo</DialogTitle>
+              <Carousel scrollTo={selectedPhoto}>
+                <CarouselContent>
+                  {sortedPhotos.map((photo, index) => (
+                    <CarouselItem
+                      key={photo.name}
+                      className="flex items-center justify-center pointer-events-auto"
+                    >
+                      <motion.img
+                        layoutId={`photo-${index}`}
+                        layout
+                        src={photo.imageUrl || getImageUrl(photo.url)}
+                        alt={photo.name}
+                        className="max-w-full max-h-[85vh] w-auto h-auto object-contain"
+                        initial={false}
+                        style={{ willChange: "transform" }}
+                        transition={{
+                          layout: {
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 35,
+                            mass: 0.8,
+                          },
+                        }}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
+              <DialogDescription className="sr-only">
+                {sortedPhotos?.[selectedPhoto]?.name}
+              </DialogDescription>
+            </DialogContent>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </>
   );
 }

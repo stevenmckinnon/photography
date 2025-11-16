@@ -339,3 +339,21 @@ code[data-line-numbers-max-digits="2"] > [data-line]::before {
 code[data-line-numbers-max-digits="3"] > [data-line]::before {
   width: 3rem;
 }
+
+/* Hide default Dialog overlay - we use custom motion overlay for lightbox */
+[data-radix-dialog-overlay] {
+  display: none !important;
+}
+
+/* Optimize layout animations for smooth transitions */
+[data-motion-component] {
+  transform-origin: center center;
+}
+
+/* Ensure images maintain aspect ratio during layout transitions */
+img[data-layout-id] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}

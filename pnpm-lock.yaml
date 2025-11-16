@@ -72,9 +72,6 @@ importers:
       embla-carousel-react:
         specifier: ^8.5.2
         version: 8.5.2(react@19.0.0)
-      framer-motion:
-        specifier: ^12.4.7
-        version: 12.4.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3

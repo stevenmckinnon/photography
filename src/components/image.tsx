@@ -1,6 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
+import { motion } from "motion/react";
 
 interface ImageWithDimensions {
   url: string;
@@ -117,18 +118,28 @@ export default function Images({
       aria-label={`View ${processedImage.name}`}
       role="button"
     >
-      <img
+      <motion.img
+        layoutId={`photo-${index}`}
+        layout
         src={processedImage.url}
         width={processedImage.width}
         height={processedImage.height}
         alt={processedImage.name}
         data-loaded={isLoaded}
         onLoad={handleImageLoaded}
-        style={style}
+        style={{ ...style, willChange: "transform" }}
         className={cn(
-          "cursor-pointer w-full h-auto object-cover hover:opacity-90 transition-all rounded-sm",
+          "cursor-pointer w-full h-auto object-cover hover:opacity-90 transition-opacity rounded-sm",
           "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
         )}
+        transition={{
+          layout: {
+            type: "spring",
+            stiffness: 400,
+            damping: 35,
+            mass: 0.8,
+          },
+        }}
       />
     </button>
   );
