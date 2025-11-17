@@ -1,7 +1,9 @@
 "use client";
-import { cn } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "motion/react";
+
+import { closeSpring, openSpring } from "@/lib/motion-presets";
+import { cn } from "@/lib/utils";
 
 interface ImageWithDimensions {
   url: string;
@@ -23,6 +25,7 @@ interface ImageProps {
   setSelectedPhoto: (index: number) => void;
   onImageLoaded?: () => void;
   style?: React.CSSProperties;
+  isSelected?: boolean;
 }
 
 export default function Images({
@@ -31,6 +34,7 @@ export default function Images({
   setSelectedPhoto,
   onImageLoaded,
   style,
+  isSelected = false,
 }: ImageProps) {
   const [processedImage, setProcessedImage] =
     useState<ImageWithDimensions | null>(null);
@@ -119,6 +123,7 @@ export default function Images({
       role="button"
     >
       <motion.img
+        initial={false}
         layoutId={`photo-${index}`}
         layout
         src={processedImage.url}
@@ -133,12 +138,7 @@ export default function Images({
           "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
         )}
         transition={{
-          layout: {
-            type: "spring",
-            stiffness: 400,
-            damping: 35,
-            mass: 0.8,
-          },
+          layout: isSelected ? openSpring : closeSpring,
         }}
       />
     </button>

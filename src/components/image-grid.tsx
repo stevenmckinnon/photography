@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import NextImage from "@/components/image";
 import { imageSortOrder } from "@/data/sortOrder";
 import useBreakpoint from "@/hooks/useBreakpoints";
+import { openSpring } from "@/lib/motion-presets";
 
 import {
   Dialog,
@@ -146,8 +147,7 @@ export default function ImageGrid() {
     }
   };
 
-  const selectedImage =
-    selectedPhoto > -1 ? sortedPhotos[selectedPhoto] : null;
+  const selectedImage = selectedPhoto > -1 ? sortedPhotos[selectedPhoto] : null;
 
   const getImageUrl = (url: string, width = 800) => {
     try {
@@ -195,6 +195,10 @@ export default function ImageGrid() {
             {rows.map((row, rowIndex) => (
               <div key={rowIndex} className="flex gap-1 md:gap-2">
                 {row.photos.map((photo) => {
+                  const photoIndex = sortedPhotos.findIndex(
+                    (p) => p.name === photo.name
+                  );
+                  const isActive = selectedPhoto === photoIndex;
                   const aspectRatio =
                     photo.width && photo.height
                       ? photo.width / photo.height
@@ -212,9 +216,8 @@ export default function ImageGrid() {
                     >
                       <NextImage
                         image={photo}
-                        index={sortedPhotos.findIndex(
-                          (p) => p.name === photo.name
-                        )}
+                        index={photoIndex}
+                        isSelected={isActive}
                         setSelectedPhoto={setSelectedPhoto}
                         style={{
                           width: "100%",
@@ -231,44 +234,49 @@ export default function ImageGrid() {
         )}
       </div>
 
-        {selectedImage && (
-          <Dialog open={true} onOpenChange={handleOpenChange} key="lightbox-dialog">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              className="fixed inset-0 z-[60] bg-black/90"
-              onClick={() => handleOpenChange(false)}
-            />
-            <DialogContent className="bg-transparent border-none max-w-[90vw] max-h-[90vh] p-0 pointer-events-none [&>button]:pointer-events-auto [&>button]:z-[70] data-[state=open]:animate-none data-[state=closed]:animate-none z-[70]">
-              <DialogTitle className="sr-only">{selectedImage.name}</DialogTitle>
-              <div className="flex h-full w-full items-center justify-center pointer-events-none">
-                <motion.img
-                  layoutId={`photo-${selectedPhoto}`}
-                  layout
-                  src={selectedImage.imageUrl || getImageUrl(selectedImage.url, 1600)}
-                  alt={selectedImage.name}
-                  className="pointer-events-auto max-h-[85vh] w-auto max-w-[90vw] object-contain"
-                  initial={false}
-                  draggable={false}
-                  style={{ willChange: "transform" }}
-                  transition={{
-                    layout: {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 35,
-                      mass: 0.8,
-                    },
-                  }}
-                />
-              </div>
-              <DialogDescription className="sr-only">
-                {selectedImage.name}
-              </DialogDescription>
-            </DialogContent>
-          </Dialog>
-        )}
+      {selectedImage && (
+        <Dialog
+          open={true}
+          onOpenChange={handleOpenChange}
+          key="lightbox-dialog"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 z-[60] bg-black/50"
+            onClick={() => handleOpenChange(false)}
+          />
+          <DialogContent
+            className="bg-transparent border-none max-w-[90vw] max-h-[90vh] p-0 pointer-events-none [&>button]:pointer-events-auto [&>button]:z-[70] data-[state=open]:animate-none data-[state=closed]:animate-none z-[70]"
+            onClick={(e) => handleOpenChange(false)}
+          >
+            <DialogTitle className="sr-only">{selectedImage.name}</DialogTitle>
+            <div className="flex h-full w-full items-center justify-center pointer-events-none">
+              <motion.img
+                key={selectedImage.name}
+                layoutId={`photo-${selectedPhoto}`}
+                layout
+                initial={false}
+                src={
+                  selectedImage.imageUrl || getImageUrl(selectedImage.url, 1600)
+                }
+                alt={selectedImage.name}
+                className="pointer-events-auto max-h-[85vh] w-auto max-w-[90vw] object-contain"
+                draggable={false}
+                style={{ willChange: "transform" }}
+                transition={{
+                  layout: openSpring,
+                }}
+              />
+            </div>
+            <DialogDescription className="sr-only">
+              {selectedImage.name}
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
