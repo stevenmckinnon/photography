@@ -206,13 +206,18 @@ export default function ImageGrid() {
                   const imgWidth = row.rowHeight * aspectRatio;
 
                   return (
-                    <div
+                    <motion.div
                       key={photo.name}
                       style={{
                         width: `${imgWidth}px`,
                         height: `${row.rowHeight}px`,
                       }}
                       className="relative overflow-hidden rounded-sm"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                     >
                       <NextImage
                         image={photo}
@@ -225,7 +230,7 @@ export default function ImageGrid() {
                           objectFit: "cover",
                         }}
                       />
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>

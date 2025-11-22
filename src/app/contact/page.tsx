@@ -294,11 +294,7 @@ const Page = () => {
                     />
                   </div>
                 </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full sm:w-auto bg-linear-to-r from-primary to-primary/80 hover:opacity-90 transition-all duration-200"
-                >
+                <Button type="submit" disabled={loading} size="lg">
                   {loading ? (
                     <div className="flex items-center space-x-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
