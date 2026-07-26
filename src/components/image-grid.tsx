@@ -3,7 +3,14 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import NextImage from "@/components/image";
 import { imageSortOrder } from "@/data/sortOrder";
@@ -23,46 +30,34 @@ interface PhotoRow {
 /** Images in the first row render eagerly so the grid paints without a gap. */
 const EAGER_COUNT = 5;
 
-export default function ImageGrid() {
-  const [photos, setPhotos] = useState<GalleryImage[]>([]);
+export default function ImageGrid({ images }: { images: GalleryImage[] }) {
+  const photos = images;
   const [selectedPhoto, setSelectedPhoto] = useState<number>(-1);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isBelowMd } = useBreakpoint("md");
 
-  // Auto-detect container width
+  // Measure before the browser paints, so the grid doesn't flash empty for a
+  // frame after hydration while waiting on the ResizeObserver callback.
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    setContainerWidth(containerRef.current.getBoundingClientRect().width);
+  }, []);
+
+  // Then keep it in sync with resizes.
   useEffect(() => {
     if (!containerRef.current) return;
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        if (entry.contentRect.width !== containerWidth) {
-          setContainerWidth(entry.contentRect.width);
-        }
+        setContainerWidth((current) =>
+          entry.contentRect.width === current ? current : entry.contentRect.width
+        );
       }
     });
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [containerWidth]);
-
-  useEffect(() => {
-    const fetchPhotos = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(`/api/images`);
-        const data = await response?.json();
-
-        setPhotos(data.images as GalleryImage[]);
-      } catch (error) {
-        console.error("Error fetching photos:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPhotos();
   }, []);
 
   const sortedPhotos = useMemo(() => {
@@ -212,9 +207,13 @@ export default function ImageGrid() {
   return (
     <>
       <div ref={containerRef} className="w-full">
-        {isLoading ? (
+        {photos.length === 0 ? (
+          <p className="py-16 text-center font-body text-muted-foreground">
+            The gallery is unavailable right now. Please try again shortly.
+          </p>
+        ) : rows.length === 0 ? (
           <div className="flex flex-col gap-2">
-            {/* Loading skeleton - show 3 rows with varying numbers of items */}
+            {/* Shown in the server HTML and until the container is measured. */}
             {[1, 2, 3].map((rowIndex) => (
               <div key={rowIndex} className="flex gap-1 md:gap-2">
                 {Array.from({ length: 2 }).map((_, itemIndex) => (
@@ -251,9 +250,14 @@ export default function ImageGrid() {
                       style={{
                         width: `${imgWidth}px`,
                         height: `${row.rowHeight}px`,
+                        // Blur-up preview behind the image. Falls back to the
+                        // muted fill below when no preview was generated.
+                        backgroundImage: photo.blurDataURL
+                          ? `url(${photo.blurDataURL})`
+                          : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
                       }}
-                      // Muted fill so a lazily-loading image reads as a frame
-                      // waiting to fill, not a hole in the grid.
                       className="relative overflow-hidden rounded-sm bg-muted/40"
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}

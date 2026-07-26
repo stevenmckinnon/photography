@@ -3,11 +3,22 @@ import BlurFade from "@/components/magicui/blur-fade";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DATA } from "@/data/resume";
+import { getGalleryImages } from "@/lib/gallery";
+import type { GalleryImage } from "@/types/gallery";
 import Link from "next/link";
 
 const BLUR_FADE_DELAY = 0.04;
 
-export default function Page() {
+export default async function Page() {
+  // A Cloudinary blip shouldn't fail the build or blank the whole page — the
+  // rest of the site still works with an empty gallery.
+  let images: GalleryImage[] = [];
+  try {
+    images = await getGalleryImages();
+  } catch (error) {
+    console.error("Could not load gallery images:", error);
+  }
+
   return (
     <>
       <section
@@ -40,7 +51,7 @@ export default function Page() {
 
       <section id="work" className="pb-20">
         <h2 className="sr-only">Selected work</h2>
-        <ImageGrid />
+        <ImageGrid images={images} />
       </section>
 
       <section id="contact">

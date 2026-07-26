@@ -16,6 +16,12 @@ export type GalleryImage = {
   alt: string;
   /** Human-readable caption shown in the lightbox, when set in Cloudinary. */
   caption?: string;
+  /**
+   * Inlined ~24px preview (base64 data URI) painted behind the image so it
+   * resolves from a blur instead of appearing out of nothing. Undefined if
+   * the preview could not be generated.
+   */
+  blurDataURL?: string;
   width: number;
   height: number;
 };

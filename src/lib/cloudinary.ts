@@ -83,7 +83,7 @@ export async function listImages(folder?: string): Promise<CloudinaryImage[]> {
 export function getImageUrl(publicId: string, options: {
   width?: number;
   height?: number;
-  quality?: number | 'auto';
+  quality?: number | 'auto' | 'auto:low' | 'auto:eco' | 'auto:good' | 'auto:best';
   format?: 'auto' | 'webp' | 'jpg' | 'png';
   crop?: 'fill' | 'fit' | 'limit' | 'thumb' | 'scale';
 } = {}): string {
