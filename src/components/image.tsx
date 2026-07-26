@@ -1,29 +1,19 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
 
 import { closeSpring, openSpring } from "@/lib/motion-presets";
 import { cn } from "@/lib/utils";
-
-interface ImageWithDimensions {
-  url: string;
-  name: string;
-  width: number;
-  height: number;
-  aspectRatio: "landscape" | "portrait";
-}
+import type { GalleryImage } from "@/types/gallery";
 
 interface ImageProps {
-  image: {
-    name: string;
-    url: string;
-    imageUrl: string;
-    width?: number;
-    height?: number;
-  };
+  image: GalleryImage;
   index: number;
   setSelectedPhoto: (index: number) => void;
-  onImageLoaded?: () => void;
+  /** Rendered CSS width, used to pick the right srcset candidate. */
+  sizes?: string;
+  /** Skip lazy-loading for the first screenful so the grid paints immediately. */
+  priority?: boolean;
   style?: React.CSSProperties;
   isSelected?: boolean;
 }
@@ -32,110 +22,40 @@ export default function Images({
   image,
   index,
   setSelectedPhoto,
-  onImageLoaded,
+  sizes,
+  priority = false,
   style,
   isSelected = false,
 }: ImageProps) {
-  const [processedImage, setProcessedImage] =
-    useState<ImageWithDimensions | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string>(image.imageUrl || "");
-
-  // Function to get optimized image URL
-  const getOptimizedImageUrl = useCallback((url: string, width = 500) => {
-    try {
-      // If it's already a Cloudinary URL, add transformations
-      if (url.includes("res.cloudinary.com")) {
-        const baseUrl = url.split("/").slice(0, -1).join("/");
-        const filename = url.split("/").pop() || "";
-        return `${baseUrl}/w_${width},q_80,f_webp,c_fill/${filename}`;
-      }
-
-      // If it's a public_id, use our API
-      const encodedPath = encodeURIComponent(url);
-      return `/api/images/${encodedPath}?width=${width}&quality=80`;
-    } catch (e) {
-      console.error("Error formatting image URL:", e);
-      return url; // Fallback to original URL
-    }
-  }, []);
-
-  useEffect(() => {
-    const loadImageDimensions = async () => {
-      const loadImage = () =>
-        new Promise<ImageWithDimensions>((resolve, reject) => {
-          const img = new Image();
-
-          img.onload = () => {
-            resolve({
-              url: imageUrl,
-              name: image.name,
-              width: img.width,
-              height: img.height,
-              aspectRatio: img.width > img.height ? "landscape" : "portrait",
-            });
-            setIsLoaded(true);
-          };
-
-          img.onerror = () => {
-            console.error(
-              `Error loading image: ${image.name} from ${imageUrl}`
-            );
-            reject(new Error("Failed to load image"));
-          };
-
-          img.src = imageUrl;
-        });
-
-      try {
-        const processedImage = await loadImage();
-        setProcessedImage(processedImage);
-      } catch (error) {
-        console.error("Error loading image:", error);
-      }
-    };
-
-    if (imageUrl) {
-      loadImageDimensions();
-    } else {
-      // If no imageUrl is available, use our API
-      setImageUrl(getOptimizedImageUrl(image.url));
-    }
-  }, [imageUrl, image.name, image.url, getOptimizedImageUrl]);
-
-  // Add this to the onLoad handler
-  const handleImageLoaded = () => {
-    setIsLoaded(true);
-    onImageLoaded?.(); // Call the callback when image loads
-  };
-
-  if (!processedImage) {
-    return (
-      <div className="w-full h-[300px] animate-pulse bg-gray-100/10 rounded-sm" />
-    );
-  }
 
   return (
     <button
       onClick={() => setSelectedPhoto(index)}
-      className="w-full h-full"
-      aria-label={`View ${processedImage.name}`}
-      role="button"
+      className="w-full h-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      aria-label={`View ${image.alt}`}
     >
       <motion.img
         initial={false}
         layoutId={`photo-${index}`}
         layout
-        src={processedImage.url}
-        width={processedImage.width}
-        height={processedImage.height}
-        alt={processedImage.name}
+        src={image.imageUrl}
+        srcSet={image.srcSet}
+        sizes={sizes}
+        width={image.width}
+        height={image.height}
+        alt={image.alt}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        decoding="async"
         data-loaded={isLoaded}
-        onLoad={handleImageLoaded}
+        onLoad={() => setIsLoaded(true)}
         style={{ ...style, willChange: "transform" }}
         className={cn(
-          "cursor-pointer w-full h-auto object-cover hover:opacity-90 transition-opacity rounded-sm",
-          "data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+          "w-full h-auto object-cover rounded-sm",
+          // Keeps white-background studio shots from bleeding into the page.
+          "outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10",
+          "opacity-0 transition-opacity duration-500 data-[loaded=true]:opacity-100",
         )}
         transition={{
           layout: isSelected ? openSpring : closeSpring,

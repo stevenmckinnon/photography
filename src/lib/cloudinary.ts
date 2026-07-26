@@ -24,6 +24,15 @@ export interface CloudinaryImage {
   format: string;
   resource_type: string;
   original_filename: string;
+  /** Custom context set in the Cloudinary media library (alt, caption). */
+  context?: CloudinaryContext;
+}
+
+export interface CloudinaryContext {
+  custom?: {
+    alt?: string;
+    caption?: string;
+  };
 }
 
 export interface CloudinaryResource {
@@ -41,6 +50,7 @@ export interface CloudinaryResource {
   url: string;
   access_mode: string;
   original_filename: string;
+  context?: CloudinaryContext;
 }
 
 export async function listImages(folder?: string): Promise<CloudinaryImage[]> {
@@ -49,6 +59,9 @@ export async function listImages(folder?: string): Promise<CloudinaryImage[]> {
       type: 'upload',
       prefix: folder,
       max_results: 500,
+      // Opt in to custom metadata so per-image alt text and captions set in
+      // the Cloudinary media library come through.
+      context: true,
     });
 
     return result.resources.map((resource: CloudinaryResource) => ({
@@ -59,6 +72,7 @@ export async function listImages(folder?: string): Promise<CloudinaryImage[]> {
       format: resource.format,
       resource_type: resource.resource_type,
       original_filename: resource.original_filename,
+      context: resource.context,
     }));
   } catch (error) {
     console.error('Error listing Cloudinary images:', error);
@@ -69,48 +83,48 @@ export async function listImages(folder?: string): Promise<CloudinaryImage[]> {
 export function getImageUrl(publicId: string, options: {
   width?: number;
   height?: number;
-  quality?: number;
-  format?: 'webp' | 'jpg' | 'png';
+  quality?: number | 'auto';
+  format?: 'auto' | 'webp' | 'jpg' | 'png';
   crop?: 'fill' | 'fit' | 'limit' | 'thumb' | 'scale';
 } = {}): string {
   const {
     width,
     height,
-    quality = 80,
-    format = 'webp',
-    crop = 'fill'
+    quality = 'auto',
+    format = 'auto',
+    // `limit` scales down to fit but never upscales, so we never pay to
+    // deliver more pixels than the original actually has.
+    crop = 'limit'
   } = options;
 
-  const transformations: string[] = [];
-
-  if (width) transformations.push(`w_${width}`);
-  if (height) transformations.push(`h_${height}`);
-  if (crop) transformations.push(`c_${crop}`);
-  if (quality) transformations.push(`q_${quality}`);
-  if (format) transformations.push(`f_${format}`);
-
-  const transformationString = transformations.length > 0 ? transformations.join(',') : '';
-
+  // Must be an object — passing a raw string makes the SDK emit `t_<string>`,
+  // which Cloudinary reads as a *named* transformation rather than parameters.
   return cloudinary.url(publicId, {
     secure: true,
-    transformation: transformationString ? [transformationString] : undefined,
+    width,
+    height,
+    crop,
+    quality,
+    fetch_format: format,
   });
 }
+
+/** Widths offered to the browser for grid thumbnails. */
+export const GRID_WIDTHS = [400, 600, 800, 1200, 1600] as const;
+
+/** Width used for the lightbox / full-screen view. */
+export const LIGHTBOX_WIDTH = 1800;
 
 export function getOptimizedImageUrl(publicId: string, width = 800): string {
-  return getImageUrl(publicId, {
-    width,
-    quality: 80,
-    format: 'webp',
-    crop: 'fill'
-  });
+  return getImageUrl(publicId, { width });
 }
 
-export function getThumbnailUrl(publicId: string, width = 400): string {
-  return getImageUrl(publicId, {
-    width,
-    quality: 70,
-    format: 'webp',
-    crop: 'thumb'
-  });
+/**
+ * Builds a `srcset` so the browser downloads the smallest file that still
+ * covers the rendered box at its device pixel ratio.
+ */
+export function buildSrcSet(publicId: string, widths: readonly number[] = GRID_WIDTHS): string {
+  return widths
+    .map((width) => `${getImageUrl(publicId, { width })} ${width}w`)
+    .join(', ');
 }

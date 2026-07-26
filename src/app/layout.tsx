@@ -10,9 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ScrollProgress } from "@/components/magicui/scroll-progress";
 
 import "./globals.css";
-import BlurFade from "@/components/magicui/blur-fade";
 import { Footer } from "@/components/footer";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const fontHeading = Syne({
   subsets: ["latin"],
@@ -38,8 +36,16 @@ export const metadata: Metadata = {
     description: DATA.description,
     url: DATA.url,
     siteName: `${DATA.name} Photography`,
-    locale: "en_US",
+    locale: "en_GB",
     type: "website",
+    images: [
+      {
+        url: DATA.ogImage,
+        width: 1200,
+        height: 630,
+        alt: `Photography by ${DATA.name}`,
+      },
+    ],
   },
   robots: {
     index: true,
@@ -54,15 +60,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     title: `${DATA.name} Photography`,
+    description: DATA.description,
     card: "summary_large_image",
-  },
-  verification: {
-    google: "",
-    yandex: "",
+    images: [DATA.ogImage],
   },
 };
-
-const BLUR_FADE_DELAY = 0.04;
 
 export default function RootLayout({
   children,
@@ -70,9 +72,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-GB" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="var(--background)" />
+        {/* Literal colours — `var()` does not resolve in meta content. These
+            mirror --background in globals.css for light and dark. */}
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content="#e8ebed"
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content="#1c2433"
+        />
       </head>
 
       <body
@@ -87,39 +100,7 @@ export default function RootLayout({
             <ScrollProgress className="top-0" />
             <div className="fixed inset-0 z-[-1] bg-[url('/noise.svg')] opacity-[0.03] pointer-events-none mix-blend-overlay" />
             <div className="max-w-7xl mx-auto py-2 sm:py-4 px-6">
-              <main className="flex flex-col h-full">
-                <section
-                  id="hero"
-                  className="relative min-h-[60vh] flex flex-col justify-center items-center text-center"
-                >
-                  <div className="w-full max-w-5xl space-y-8">
-                    <div className="flex flex-col items-center gap-6">
-                      <BlurFade delay={BLUR_FADE_DELAY}>
-                        <Avatar className="size-32 border-2 rounded-full border-primary/20 shadow-2xl ring-4 ring-background">
-                          <AvatarImage
-                            alt={DATA.name}
-                            src={DATA.avatarUrl}
-                            className="object-cover transition-all duration-500"
-                          />
-                          <AvatarFallback>{DATA.initials}</AvatarFallback>
-                        </Avatar>
-                      </BlurFade>
-                      <BlurFade delay={BLUR_FADE_DELAY * 2}>
-                        <h1 className="text-4xl font-heading font-bold tracking-tighter sm:text-6xl xl:text-7xl/none">
-                          {DATA.name}
-                        </h1>
-                      </BlurFade>
-                      <BlurFade delay={BLUR_FADE_DELAY * 2}>
-                        <p className="prose max-w-lg text-pretty font-body text-xl text-muted-foreground dark:prose-invert leading-relaxed tracking-wide">
-                          Glasgow based lifestyle and portrait photographer
-                          capturing moments of raw authenticity.
-                        </p>
-                      </BlurFade>
-                    </div>
-                  </div>
-                </section>
-                {children}
-              </main>
+              <main className="flex flex-col h-full">{children}</main>
               <Footer />
               <Navbar />
               <Toaster />

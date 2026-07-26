@@ -1,17 +1,18 @@
-# Portfolio
+# Steve McKinnon Photography
 
-Built with next.js, [shadcn/ui](https://ui.shadcn.com/), and [magic ui](https://magicui.design/), deployed on Vercel.
+Portfolio site for a Glasgow-based lifestyle and portrait photographer.
+Built with Next.js and [shadcn/ui](https://ui.shadcn.com/), deployed on Vercel
+at [stevenmckinnon.co.uk](https://stevenmckinnon.co.uk).
 
-# Features
+## Stack
 
-- Setup only takes a few minutes by editing the [single config file](./src/data/resume.tsx)
-- Built using Next.js 14, React, Typescript, Shadcn/UI, TailwindCSS, Framer Motion, Magic UI
-- Includes a blog
-- Responsive for different devices
-- Optimized for Next.js and Vercel
-- Image optimization with Cloudinary
+- Next.js 16 (App Router) with React 19 and TypeScript
+- Tailwind CSS v4, shadcn/ui, [magic ui](https://magicui.design/)
+- Motion for the gallery and lightbox animations
+- Cloudinary for image hosting and on-the-fly resizing
+- Resend for contact form delivery, Upstash Redis for rate limiting
 
-# Getting Started Locally
+## Getting started
 
 1. Install dependencies:
 
@@ -19,44 +20,50 @@ Built with next.js, [shadcn/ui](https://ui.shadcn.com/), and [magic ui](https://
    pnpm install
    ```
 
-2. Set up environment variables:
-
-   Create a `.env.local` file with the following variables:
+2. Create a `.env.local`:
 
    ```env
-   # Cloudinary Configuration
+   # Cloudinary — also used server-side for image transformations
    CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 
    # Email (Resend)
    RESEND_API_KEY=your_resend_api_key
 
-   # Redis (Upstash)
+   # Rate limiting (Upstash)
    UPSTASH_REDIS_REST_URL=your_redis_url
    UPSTASH_REDIS_REST_TOKEN=your_redis_token
-
-   # Image Processing (Imgix - optional)
-   IMGIX_URL=your_imgix_url
    ```
 
-3. Start the local Server:
+   These are read server-side only. Do not add them to `next.config.ts`'s `env`
+   block — that inlines values into any bundle that references them.
+
+3. Run the dev server:
 
    ```bash
    pnpm dev
    ```
 
-4. Open the [Config file](./src/data/resume.tsx) and make changes
+## Managing the gallery
 
-## Cloudinary Setup
+Images are pulled from Cloudinary at request time by `/api/images`.
 
-1. Create a Cloudinary account at [cloudinary.com](https://cloudinary.com)
-2. Get your credentials from the Dashboard
-3. Upload your images to Cloudinary
-4. Update the environment variables with your Cloudinary URL
+- **Adding photos** — upload to Cloudinary. They appear automatically, after
+  any image listed in [`src/data/sortOrder.ts`](./src/data/sortOrder.ts).
+- **Ordering** — list filenames in `sortOrder.ts`, most important first.
+  Matching ignores case and treats spaces and underscores as equivalent, since
+  Cloudinary rewrites spaces on upload.
+- **Alt text and captions** — set the `alt` and `caption` context fields on each
+  image in the Cloudinary media library. Without an `alt`, images fall back to a
+  generic description.
 
-The app will automatically fetch and optimize images from your Cloudinary account.
+The API only ever returns resized derivatives (`f_auto,q_auto`), never the
+originals — see [`src/lib/cloudinary.ts`](./src/lib/cloudinary.ts).
 
-TODO: Add testing framework.
+## Site content
 
-# License
+Name, tagline, contact details, social links and the social share image all live
+in [`src/data/resume.tsx`](./src/data/resume.tsx).
 
-Licensed under the [MIT license](https://github.com/stevenmckinnon/portfolio/blob/main/LICENSE.md).
+## License
+
+Licensed under the [MIT license](./LICENSE).

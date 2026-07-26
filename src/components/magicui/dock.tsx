@@ -33,13 +33,13 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
     const mousex = useMotionValue(Infinity);
 
     const renderChildren = () => {
-      return React.Children.map(children, (child: any) => {
-        if (React.isValidElement(child)) {
+      return React.Children.map(children, (child) => {
+        if (React.isValidElement<DockIconProps>(child)) {
           return React.cloneElement(child, {
             mousex,
             magnification,
             distance,
-          } as DockIconProps);
+          });
         }
         return child;
       });
@@ -80,7 +80,12 @@ const DockIcon = ({
 }: DockIconProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const distanceCalc = useTransform(mousex ?? useMotionValue(0), (val: number) => {
+  // Hooks must run unconditionally, so always create the fallback value and
+  // pick between it and the injected one afterwards.
+  const fallbackMouseX = useMotionValue(Infinity);
+  const pointerX = mousex ?? fallbackMouseX;
+
+  const distanceCalc = useTransform(pointerX, (val: number) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
   });

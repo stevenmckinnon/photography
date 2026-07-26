@@ -14,21 +14,23 @@ import {
 interface EmailTemplateProps {
   name: string;
   email: string;
-  subject: string;
+  shootType: string;
+  preferredDate?: string;
   message: string;
   instagram?: string;
 }
 
-const baseUrl = "https://stevemckinnon.co.uk";
+const baseUrl = DATA.url;
 
 export const ContactEmail = ({
   name,
   email,
-  subject,
+  shootType,
+  preferredDate,
   message,
   instagram,
 }: EmailTemplateProps) => {
-  const previewText = `${message.substring(0, 15)}...`;
+  const previewText = `${shootType} enquiry from ${name}`;
 
   return (
     <Html>
@@ -53,11 +55,14 @@ export const ContactEmail = ({
             <Row>
               <Text style={heading}>Here&apos;s what {name} wrote</Text>
               <Text style={paragraph}>Contact email: {email}</Text>
-              <Text style={paragraph}>Subject: {subject}</Text>
-              <Text style={review}>{message}</Text>
-              {instagram && (
-                <Text style={paragraph}>Instagram: @{instagram}</Text>
+              <Text style={paragraph}>Shoot type: {shootType}</Text>
+              {preferredDate && (
+                <Text style={paragraph}>Preferred date: {preferredDate}</Text>
               )}
+              {instagram && (
+                <Text style={paragraph}>Instagram: {instagram}</Text>
+              )}
+              <Text style={review}>{message}</Text>
             </Row>
           </Section>
         </Container>
