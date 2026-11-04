@@ -27,6 +27,7 @@ import {
   SHOOT_TYPES,
   contactSchema,
   type ContactFormData,
+  type ContactFormInput,
 } from "@/lib/contact-schema";
 
 /** Character count stays hidden until the limit is actually in play. */
@@ -44,7 +45,8 @@ const Page = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const form = useForm<ContactFormData>({
+  // Fields hold the pre-transform shape; handleSubmit hands over the parsed one.
+  const form = useForm<ContactFormInput, unknown, ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
       name: "",

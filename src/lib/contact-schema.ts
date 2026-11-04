@@ -16,12 +16,9 @@ export const contactSchema = z.object({
     .min(2, "Please enter your name")
     .max(50, "Name must be less than 50 characters"),
   email: z
-    .string()
     .email("Please enter a valid email address")
     .max(100, "Email must be less than 100 characters"),
-  shootType: z.enum(SHOOT_TYPES, {
-    errorMap: () => ({ message: "Please choose a shoot type" }),
-  }),
+  shootType: z.enum(SHOOT_TYPES, { error: () => "Please choose a shoot type" }),
   preferredDate: z
     .string()
     .max(100)
@@ -38,4 +35,10 @@ export const contactSchema = z.object({
     .transform((val) => val || undefined),
 });
 
-export type ContactFormData = z.infer<typeof contactSchema>;
+/**
+ * The optional fields are transformed, so what the form holds and what parsing
+ * returns differ. react-hook-form needs the input shape for its fields and the
+ * output shape for the submit handler, so both are exported.
+ */
+export type ContactFormInput = z.input<typeof contactSchema>;
+export type ContactFormData = z.output<typeof contactSchema>;
