@@ -1,3 +1,10 @@
+# Single-app repo, but this file must declare "packages" even so: pnpm 9 treats any
+# pnpm-workspace.yaml as a workspace manifest and fails the install outright with
+# "packages field missing or empty". Vercel selects pnpm 9 from lockfileVersion 9.0,
+# so omitting this breaks the deploy. Verified against pnpm 9 and pnpm 12.
+packages:
+  - "."
+
 minimumReleaseAgeExclude:
   - '@babel/core@7.29.13'
   - '@babel/generator@7.29.13'
